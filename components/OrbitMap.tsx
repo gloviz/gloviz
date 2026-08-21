@@ -37,7 +37,7 @@ export default function OrbitMap({
         const css = (n: string, f: string) =>
           getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
         chart = H.mapChart(chartId, {
-          orbit: { enabled: true, id: chartId, ...(note ? { llmContext: { text: [note] } } : {}) },
+          orbit: { enabled: true, id: chartId, tools: ['grid', 'summary', 'distribution', 'kpi', 'contribution', 'insights', 'narrate', 'ai', 'annotate', 'export', 'fullscreen', 'history', 'share'], ...(note ? { llmContext: { text: [note] } } : {}) },
           chart: { map: topology, backgroundColor: 'transparent', height },
           title: { text: undefined },
           credits: { enabled: false },

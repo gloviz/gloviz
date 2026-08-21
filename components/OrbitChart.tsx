@@ -9,6 +9,14 @@ declare global {
 
 export interface SeriesRef { id: number; name: string }
 
+/** Everything the installation offers, with sharing switched on. */
+const DEFAULT_TOOLS = [
+  'summary', 'distribution', 'kpi', 'contribution', 'correlations',
+  'anomaly', 'control-limits', 'forecast', 'trendline', 'indicators',
+  'insights', 'narrate', 'ai', 'altviz', 'filter', 'derived',
+  'grid', 'history', 'fullscreen', 'export', 'annotate', 'share',
+];
+
 export interface OrbitChartProps {
   chartId: string;
   title: string;
@@ -98,7 +106,8 @@ export default function OrbitChart({
           enabled: true,
           id: chartId,
           menuVisibility,
-          ...(tools ? { tools } : {}),
+          // 'share' is off by default and has to be whitelisted explicitly.
+          tools: tools ?? DEFAULT_TOOLS,
           ...(initialTool ? { initialTool } : {}),
           ...(note ? { llmContext: { text: [note] } } : {}),
         },

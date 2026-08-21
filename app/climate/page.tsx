@@ -21,6 +21,15 @@ export default async function Climate() {
     <DomainPage
       pageKey="gloviz-climate"
       charts={6}
+      relationships={{
+        dateToleranceMs: 3_600_000,
+        links: [
+          { a: { content: 'cli-temp', field: 'x' }, b: { content: 'cli-wind', field: 'x' } },
+          { a: { content: 'cli-temp', field: 'x' }, b: { content: 'cli-humidity', field: 'x' } },
+          { a: { content: 'cli-temp', field: 'x' }, b: { content: 'cli-pressure', field: 'x' } },
+          { a: { content: 'cli-windrose', field: 0 }, b: { content: 'cli-temp-now', field: 0 } },
+        ],
+      }}
       kicker="Climate · Open-Meteo · hourly, UTC"
       title="Thirty cities," accent="hour by hour."
       icon="climate"

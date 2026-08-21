@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { HERO_MAP_SVG, CTA_MAP_SVG } from '@/lib/artwork';
+import { HERO_MAP_SVG } from '@/lib/artwork';
 import { getKpis, getSources } from '@/lib/queries';
 import { ICONS, SPARKS } from '@/lib/icons';
 
@@ -68,6 +68,36 @@ export default async function Home() {
         </div>
       </div>
 
+
+      <section className="wrap sec" id="stories">
+        <div className="shead">
+          <div>
+            <div className="kicker">Curated</div>
+            <h2 style={{ marginTop: 12 }}>Stories <em>in the data</em></h2>
+            <p>Each one opens with a specific Orbit tool already running on a specific question.</p>
+          </div>
+          <Link className="link" href="/stories">
+            All stories{' '}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+          </Link>
+        </div>
+        <div className="grid3">
+          {[
+            { slug: 'heat-and-power', icon: 'climate', tag: 'Climate + energy', title: 'Heat and power', lead: 'Temperature against the solar energy arriving at the same coordinates, correlations open on load.' },
+            { slug: 'the-pandemic-dip', icon: 'health', tag: 'Health', title: 'The pandemic dip', lead: 'Life expectancy fell in 2020 and 2021. The anomaly detector finds it unprompted.' },
+            { slug: 'quake-week', icon: 'environment', tag: 'Environment', title: 'A week of earthquakes', lead: 'Forty M4+ events a day, and the wildly unstable energy that comes with them.' },
+          ].map((st) => (
+            <Link key={st.slug} className="card dcard" href={`/stories/${st.slug}`}>
+              <div className="dtop">
+                <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[st.icon] }} />
+                <h3>{st.title}</h3>
+              </div>
+              <p>{st.lead}</p>
+              <div className="dtags"><span className="pill on">{st.tag}</span></div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="wrap sec" id="domains">
         <div className="shead">
@@ -158,20 +188,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="wrap">
-        <div className="cta">
-          <div className="bg" dangerouslySetInnerHTML={{ __html: CTA_MAP_SVG }} />
-          <div className="kicker">gloviz.app</div>
-          <h2 style={{ marginTop: 14 }}>Start with <em>one chart.</em></h2>
-          <p className="muted" style={{ margin: '16px auto 26px', maxWidth: '44ch' }}>
-            Open a domain and put Orbit&apos;s anomaly detection on a live series.
-          </p>
-          <div className="hactions" style={{ justifyContent: 'center' }}>
-            <Link href="/environment" className="btn amber">Watch the planet shake</Link>
-            <Link href="/status" className="btn">API status</Link>
-          </div>
-        </div>
-      </section>
           </main>
   );
 }

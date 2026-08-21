@@ -2,10 +2,11 @@ import OrbitPageMode from './OrbitPageMode';
 import { ICONS } from '@/lib/icons';
 
 export default function DomainPage({
-  kicker, title, accent, lead, icon, children, kpis, pageKey, charts = 6,
+  kicker, title, accent, lead, icon, children, kpis, pageKey, charts = 6, relationships,
 }: {
   pageKey: string;
   charts?: number;
+  relationships?: any;
   kicker: string;
   title: string;
   accent: string;
@@ -47,7 +48,7 @@ export default function DomainPage({
         Every chart carries the full Orbit toolbar. The page bar adds Insights,
         Chat, Filters and Compare across all of them.
       </p>
-      <OrbitPageMode pageKey={pageKey} expectedCharts={charts} />
+      <OrbitPageMode pageKey={pageKey} expectedCharts={charts} relationships={relationships} />
     </main>
   );
 }

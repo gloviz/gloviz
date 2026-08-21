@@ -23,6 +23,13 @@ export default async function Economy() {
     <DomainPage
       pageKey="gloviz-economy"
       charts={6}
+      relationships={{
+        links: [
+          { a: { content: 'econ-map', field: 0 }, b: { content: 'econ-growth', field: 0 } },
+          { a: { content: 'econ-growth', field: 0 }, b: { content: 'econ-pop', field: 0 } },
+          { a: { content: 'econ-phillips', field: 0 }, b: { content: 'econ-growth', field: 0 } },
+        ],
+      }}
       kicker="Economy · World Bank · annual"
       title="The money," accent="measured."
       icon="economy"

@@ -24,6 +24,15 @@ export default async function Environment() {
     <DomainPage
       pageKey="gloviz-environment"
       charts={8}
+      relationships={{
+        dateToleranceMs: 86_400_000,
+        links: [
+          { a: { content: 'env-quakes', field: 'x' }, b: { content: 'env-quake-energy', field: 'x' } },
+          { a: { content: 'env-quakes', field: 'x' }, b: { content: 'env-quake-mag', field: 'x' } },
+          { a: { content: 'env-co2-tree', field: 0 }, b: { content: 'env-co2pc', field: 0 } },
+          { a: { content: 'env-map', field: 0 }, b: { content: 'env-co2pc', field: 0 } },
+        ],
+      }}
       kicker="Environment · USGS, Our World in Data"
       title="The planet," accent="shaking and warming."
       icon="environment"

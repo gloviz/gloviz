@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Brand small />
           <span>Built with Highcharts Orbit</span>
           <span className="r">
+            <Link href="/stories">Stories</Link>
             <Link href="/status">API status</Link>
             <a href="https://www.highcharts.com/products/orbit/">Orbit</a>
             <a href="https://github.com/gloviz/gloviz">GitHub</a>
