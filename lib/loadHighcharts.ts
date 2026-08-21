@@ -22,8 +22,22 @@ const SCRIPTS = [
   'https://code.highcharts.com/modules/exporting.js',
   'https://code.highcharts.com/modules/export-data.js',
   'https://code.highcharts.com/modules/accessibility.js',
+  // Grid Lite gives Orbit its 'grid' tool and makes tables page-mode content.
+  // code.highcharts.com does not serve the Grid build, jsDelivr does.
+  'https://cdn.jsdelivr.net/npm/@highcharts/grid-lite/grid-lite.js',
   `https://orbit.highsoftlabs.com/module/${ORBIT_KEY}/orbit.js`,
 ];
+
+const STYLES = ['https://cdn.jsdelivr.net/npm/@highcharts/grid-lite/css/grid.css'];
+
+function loadStyle(href: string): void {
+  if (document.querySelector(`link[data-hc="${href}"]`)) return;
+  const el = document.createElement('link');
+  el.rel = 'stylesheet';
+  el.href = href;
+  el.dataset.hc = href;
+  document.head.appendChild(el);
+}
 
 function loadOne(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -51,6 +65,7 @@ export function ensureHighcharts(): Promise<any> {
   if (typeof window === 'undefined') return Promise.resolve(null);
   if (!promise) {
     promise = (async () => {
+      STYLES.forEach(loadStyle);
       for (const src of SCRIPTS) {
         try {
           await loadOne(src);

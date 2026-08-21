@@ -2,7 +2,8 @@ import DomainPage from '@/components/DomainPage';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitMap from '@/components/OrbitMap';
 import { ICONS } from '@/lib/icons';
-import { getLatest, getScatter, getSeriesRefs } from '@/lib/queries';
+import OrbitGrid from '@/components/OrbitGrid';
+import { getGridColumns, getLatest, getScatter, getSeriesRefs } from '@/lib/queries';
 import { columnSeries, dumbbellSeries, scatterSeries } from '@/lib/charts';
 
 export const revalidate = 300;
@@ -16,11 +17,18 @@ export default async function Health() {
     getSeriesRefs('SP.DYN.LE00.IN:', 14),
     getSeriesRefs('NCDMORT3070:', 12),
   ]);
+  const grid = await getGridColumns([
+    { prefix: 'WHOSIS_000001:', label: 'Life expectancy (yrs)' },
+    { prefix: 'WHOSIS_000002:', label: 'Healthy life expectancy (yrs)' },
+    { prefix: 'SP.DYN.IMRT.IN:', label: 'Infant mortality (per 1,000)' },
+    { prefix: 'SH.XPD.CHEX.GD.ZS:', label: 'Health spending (% GDP)' },
+    { prefix: 'NCDMORT3070:', label: 'NCD mortality 30-70 (%)' },
+  ]);
 
   return (
     <DomainPage
       pageKey="gloviz-health"
-      charts={6}
+      charts={7}
       kicker="Health · WHO GHO, World Bank"
       title="Years lived," accent="and years lost."
       icon="health"
@@ -91,6 +99,15 @@ export default async function Health() {
         type="line"
         initialTool="trendline"
         height={380}
+      />
+
+      <OrbitGrid
+        gridId="hea-grid"
+        title="Every country, every health indicator"
+        subtitle="WHO and World Bank · latest year · sortable, filters with the charts"
+        iconHtml={ICONS.health}
+        attribution="Sources: WHO Global Health Observatory, World Bank Open Data"
+        columns={grid}
       />
 
       <OrbitChart

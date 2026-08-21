@@ -274,3 +274,76 @@ export async function getLiveHighlights(): Promise<LiveItem[]> {
 
   return items.map((i) => ({ ...i, detail: `${i.detail} · ${ago(i.ts)}` }));
 }
+
+/** Latest value per geography for several metrics, shaped as grid columns. */
+export async function getGridColumns(
+  metrics: { prefix: string; label: string }[],
+  keyLabel = 'Country',
+): Promise<Record<string, (string | number | null)[]>> {
+  const sets = await Promise.all(metrics.map((m) => getLatest(m.prefix)));
+  const keys = new Set<string>();
+  sets.forEach((s) => s.forEach((p) => keys.add(p.code)));
+  const byMetric = sets.map((s) => new Map(s.map((p) => [p.code, p.value])));
+  const rows = [...keys].sort();
+  const columns: Record<string, (string | number | null)[]> = { [keyLabel]: rows };
+  metrics.forEach((m, i) => {
+    columns[m.label] = rows.map((k) => {
+      const v = byMetric[i].get(k);
+      return v === undefined ? null : Math.round(v * 100) / 100;
+    });
+  });
+  // Drop rows with no data at all, so the table is not mostly empty.
+  const keep = rows.map((_, r) => metrics.some((m) => columns[m.label][r] !== null));
+  for (const col of Object.keys(columns)) columns[col] = columns[col].filter((_, r) => keep[r]);
+  return columns;
+}
+
+/** Every metric available for a given geography, for the compare surface. */
+export async function getCountryProfile(codes: string[]) {
+  const db = readClient();
+  const { data } = await db
+    .from('series')
+    .select('id, geo_code, title, unit, domain, external_id, frequency, sources(name, attribution)')
+    .in('geo_code', codes)
+    .limit(2000);
+  const rows = (data ?? []) as any[];
+
+  const byMetric = new Map<string, {
+    metric: string; title: string; unit: string; domain: string;
+    source: string; attribution: string; frequency: string;
+    refs: { id: number; name: string; code: string }[];
+  }>();
+  for (const r of rows) {
+    const metric = r.external_id.slice(0, r.external_id.lastIndexOf(':')) || r.external_id;
+    if (!byMetric.has(metric)) {
+      byMetric.set(metric, {
+        metric,
+        title: r.title.replace(/\s+\S+$/, '').trim() || r.title,
+        unit: r.unit,
+        domain: r.domain,
+        source: r.sources?.name ?? '',
+        attribution: r.sources?.attribution ?? '',
+        frequency: r.frequency,
+        refs: [],
+      });
+    }
+    byMetric.get(metric)!.refs.push({ id: r.id, name: r.geo_code, code: r.geo_code });
+  }
+  // Only metrics that actually cover every requested country are comparable.
+  return [...byMetric.values()]
+    .filter((m) => codes.every((c) => m.refs.some((r) => r.code === c)))
+    .map((m) => ({ ...m, refs: m.refs.filter((r) => codes.includes(r.code)) }))
+    .sort((a, b) => a.domain.localeCompare(b.domain) || a.title.localeCompare(b.title));
+}
+
+/** Geographies that have enough series to be worth comparing. */
+export async function getComparableGeos(): Promise<{ code: string; count: number }[]> {
+  const db = readClient();
+  const { data } = await db.from('series').select('geo_code').limit(5000);
+  const counts = new Map<string, number>();
+  for (const r of (data ?? []) as any[]) counts.set(r.geo_code, (counts.get(r.geo_code) ?? 0) + 1);
+  return [...counts.entries()]
+    .filter(([code, n]) => n >= 8 && /^[A-Z]{3}$/.test(code))
+    .map(([code, count]) => ({ code, count }))
+    .sort((a, b) => b.count - a.count);
+}

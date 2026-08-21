@@ -36,13 +36,13 @@ jobs:
             echo "jobs=${{ github.event.inputs.jobs }}" >> "$GITHUB_OUTPUT"
             echo "days=${{ github.event.inputs.days }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "20 * * * *" ]; then
-            echo "jobs=open-meteo:weather entsoe:day-ahead" >> "$GITHUB_OUTPUT"
+            echo "jobs=open-meteo:weather entsoe:day-ahead opensky:flights" >> "$GITHUB_OUTPUT"
             echo "days=2" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "40 6 * * *" ]; then
             echo "jobs=ecb:fx usgs:quakes nasa-power:climate" >> "$GITHUB_OUTPUT"
             echo "days=7" >> "$GITHUB_OUTPUT"
           else
-            echo "jobs=worldbank:indicators owid:indicators who:indicators" >> "$GITHUB_OUTPUT"
+            echo "jobs=worldbank:indicators owid:indicators who:indicators eurostat:indicators oecd:indicators gbif:occurrences" >> "$GITHUB_OUTPUT"
             echo "days=1" >> "$GITHUB_OUTPUT"
           fi
 

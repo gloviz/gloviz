@@ -11,6 +11,12 @@ const ALL_SOURCES = [
   'OECD', 'IMF', 'ECB', 'WHO', 'Our World in Data', 'OpenSky', 'NASA POWER',
   'GBIF', 'data.europa.eu',
 ];
+const SOURCE_LABEL: Record<string, string> = {
+  'FRED, Federal Reserve Bank of St. Louis': 'FRED',
+  'The OpenSky Network': 'OpenSky',
+  'GBIF, Global Biodiversity Information Facility': 'GBIF',
+  'WHO Global Health Observatory': 'WHO',
+};
 const NAME_MAP: Record<string, string> = {
   'World Bank Open Data': 'World Bank',
   'ENTSO-E Transparency Platform': 'ENTSO-E',
@@ -22,7 +28,7 @@ export default async function Home() {
   const [kpis, sources, live] = await Promise.all([
     getKpis(), getSources(), getLiveHighlights(),
   ]);
-  const integrated = new Set(sources.map((s) => NAME_MAP[s.name] ?? s.name));
+  const integrated = new Set(sources.map((s) => SOURCE_LABEL[s.name] ?? NAME_MAP[s.name] ?? s.name));
   const fmt = (n: number) =>
     n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
 
@@ -112,8 +118,8 @@ export default async function Home() {
             <h2 style={{ marginTop: 12 }}>One planet, <em>six lenses</em></h2>
             <p>Every dashboard streams straight from the source. Pick a domain, pick a region: Orbit&apos;s tools work the same everywhere.</p>
           </div>
-          <Link className="link" href="/economy">
-            Start with the economy{' '}
+          <Link className="link" href="/compare">
+            Compare two countries{' '}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </div>
@@ -126,6 +132,8 @@ export default async function Home() {
             { name: 'Health', icon: 'health', spark: 'health', freq: 'Annual', live: false, desc: '2,000+ WHO indicators and harmonized long-run health series for every country.', tags: ['WHO GHO', 'OWID'] },
             { name: 'Finance', icon: 'finance', spark: 'finance', freq: 'Daily', live: true, desc: 'Twenty ECB reference rates against the euro, every working day.', tags: ['ECB'] },
             { name: 'Markets', icon: 'forecast', spark: 'economy', freq: 'Daily', live: true, desc: 'Treasury yields, crude, gas, the S&P 500, the VIX and credit spreads from FRED.', tags: ['FRED'] },
+            { name: 'Nature', icon: 'environment', spark: 'health', freq: 'Annual', live: false, desc: 'Three billion species observations from GBIF, counted per country and per kingdom.', tags: ['GBIF'] },
+            { name: 'Transport', icon: 'forecast', spark: 'finance', freq: 'Hourly', live: true, desc: 'Aircraft airborne over four regions, counted every hour from ADS-B.', tags: ['OpenSky'] },
           ].map((d) => (
             <Link key={d.name} className="card dcard" href={`/${d.name.toLowerCase()}`}>
               <div className="dtop">
@@ -179,7 +187,7 @@ export default async function Home() {
       <section className="wrap sec" id="sources">
         <div className="shead">
           <div>
-            <div className="kicker">Sixteen sources, zero scraping</div>
+            <div className="kicker">{sources.length} sources live, zero scraping</div>
             <h2 style={{ marginTop: 12 }}>Built on the world&apos;s <em>best open APIs</em></h2>
             <p>Global and regional institutions only: one integration per source covers every country it serves. Lit pills are live in the database today.</p>
           </div>

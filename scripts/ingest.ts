@@ -10,6 +10,10 @@ import { whoIndicators } from '../lib/adapters/who';
 import { nasaPower } from '../lib/adapters/nasapower';
 import { fredSeries } from '../lib/adapters/fred';
 import { openaqAir } from '../lib/adapters/openaq';
+import { eurostat } from '../lib/adapters/eurostat';
+import { oecd } from '../lib/adapters/oecd';
+import { gbifOccurrences } from '../lib/adapters/gbif';
+import { openskyFlights } from '../lib/adapters/opensky';
 
 export const ADAPTERS: Adapter[] = [
   entsoeDayAhead,
@@ -22,6 +26,10 @@ export const ADAPTERS: Adapter[] = [
   nasaPower,
   fredSeries,
   openaqAir,
+  eurostat,
+  oecd,
+  gbifOccurrences,
+  openskyFlights,
 ];
 
 const CHUNK = 5000;

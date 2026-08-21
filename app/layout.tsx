@@ -5,6 +5,7 @@ import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { MARK_SVG } from '@/lib/artwork';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://gloviz.app'),
   title: 'GLOVIZ: the world\'s open data, live',
   description:
     'Economy, energy, climate, health and transport for 190+ countries, streamed from the world\'s best open APIs and analyzed in the chart with Highcharts Orbit.',
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />      </head>
       <body>
+        <a href="#main" className="skiplink">Skip to content</a>
         <header className="top">
           <div className="wrap topin">
             <Brand />
@@ -39,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </header>
-        {children}
+        <div id="main">{children}</div>
         <footer className="wrap foot">
           <Brand small />
           <span>Built with Highcharts Orbit</span>

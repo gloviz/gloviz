@@ -2,7 +2,8 @@ import DomainPage from '@/components/DomainPage';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitMap from '@/components/OrbitMap';
 import { ICONS } from '@/lib/icons';
-import { getLatest, getScatter, getSeriesRefs } from '@/lib/queries';
+import OrbitGrid from '@/components/OrbitGrid';
+import { getGridColumns, getLatest, getScatter, getSeriesRefs } from '@/lib/queries';
 import { columnSeries, scatterSeries, treemapSeries } from '@/lib/charts';
 
 export const revalidate = 300;
@@ -16,13 +17,21 @@ export default async function Economy() {
     getSeriesRefs('SL.UEM.TOTL.ZS:', 12),
     getScatter('SL.UEM.TOTL.ZS:', 'FP.CPI.TOTL.ZG:', 'SP.POP.TOTL:'),
   ]);
+  const grid = await getGridColumns([
+    { prefix: 'NY.GDP.PCAP.CD:', label: 'GDP per capita (US$)' },
+    { prefix: 'NY.GDP.MKTP.KD.ZG:', label: 'GDP growth (%)' },
+    { prefix: 'FP.CPI.TOTL.ZG:', label: 'Inflation (%)' },
+    { prefix: 'SL.UEM.TOTL.ZS:', label: 'Unemployment (%)' },
+    { prefix: 'NE.TRD.GNFS.ZS:', label: 'Trade (% of GDP)' },
+    { prefix: 'SP.POP.TOTL:', label: 'Population' },
+  ]);
   const attribution = 'Source: World Bank Open Data';
   const fmt = (n?: number) => (n === undefined ? 'n/a' : n.toLocaleString('en', { maximumFractionDigits: 0 }));
 
   return (
     <DomainPage
       pageKey="gloviz-economy"
-      charts={6}
+      charts={7}
       relationships={{
         links: [
           { a: { content: 'econ-map', field: 0 }, b: { content: 'econ-growth', field: 0 } },
@@ -100,6 +109,16 @@ export default async function Economy() {
         tools={['summary', 'contribution', 'kpi', 'insights', 'ai', 'export', 'fullscreen']}
         height={420}
         {...treemapSeries('Population', pop, 30)}
+      />
+
+      <OrbitGrid
+        gridId="econ-grid"
+        title="Every economy, every indicator"
+        subtitle="World Bank · latest year · sortable, and it filters with the charts"
+        iconHtml={ICONS.summary}
+        attribution={attribution}
+        note="One row per country, latest reported year per indicator. Blank cells mean the country has not reported that indicator."
+        columns={grid}
       />
 
       <OrbitChart
