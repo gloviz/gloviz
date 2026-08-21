@@ -307,6 +307,86 @@ Point any assistant at `llms-full.txt` before it writes Orbit code.
 
 ---
 
+## Live demos (the fastest way to check behaviour)
+
+<https://orbit.highsoftlabs.com/demos/index.html> · beta, so the API and tools
+can change; the changelog is at `/changelog/`.
+
+| Demo | What it settles |
+|---|---|
+| `playground.html` | Every per-chart option toggled live, config rebuilding as you go |
+| `menu-visibility.html` | `always` vs `auto` (hover/focus) vs `compact` (sparkle toggle) |
+| `sharing.html` | `share` only appears when whitelisted; org can still disable it |
+| `popout.html` | Tool panels detaching into movable, resizable windows |
+| `targets.html` | `toolbarTarget` / `toolPaneTarget` placing chrome in your own layout |
+| `chart-types.html` | The same opt-in on line, stacked column, pie, scatter, polar, candlestick |
+| `alternate-views.html` | Summary, distribution, KPI, contribution as in-place views |
+| `analysis.html` | Anomaly, correlations, control limits, forecast, trend, derived, indicators |
+| `ai-tools.html` | Insights, Narrator, Assistant reading `llmContext` and DOM context |
+| `grid.html` | Orbit on a Highcharts Grid, plus the `grid` tool on charts |
+| `manual-global.html` | `configure({ applyToAll })` and `attachToChart()` with a teardown handle |
+| `page-mode.html` | A full dashboard: map + charts + grid filtering and comparing together |
+| `llm-development.html` | The skill and llms.txt references for AI-assisted development |
+
+### Details worth remembering from the demos
+
+- **The tools whitelist has exactly 20 valid keys.** Anything else is invented.
+- **`initialTool` must be in the `tools` list** for it to open on load.
+- **Alternate views keep the View picker:** landing on `contribution` still lets
+  the user switch back to the chart or to another enabled view.
+- **Indicators need a datetime axis**, and only list indicator types whose series
+  type is actually registered.
+- **A tool shows only when its data supports it**, so one shared `tools` list
+  across mixed chart types is fine: each chart shows the subset that fits.
+- **Page Mode links content by shared vocabulary**: same region names, same month
+  axis. That is why GLOVIZ names series by ISO3 code or city name consistently.
+- **`allowPinning` does nothing outside page mode**; the pin toggle only exists in
+  a page session.
+- Recommended prompt habits when working with an assistant: name tools by key,
+  say "use Page Mode" the moment more than one chart is involved, and have it
+  check every key and URL against `llms.txt`.
+
+---
+
+## Capability catalogue (product page wording, for pitching GLOVIZ)
+
+**On every chart:** Data Grid (Grid Pro table), Summary Stats, Correlations
+(Pearson per pair), Anomaly Detection (Z-score, IQR, rate-of-change), Forecast
+(linear regression and moving average with confidence bands), Trend Lines
+(least squares with R2), Filter & Focus, Derived Series (difference, ratio,
+% change, moving average, cumulative), Alt. Visualization (AI), Indicators
+(SMA, EMA, Bollinger, RSI, MACD from Highcharts Stock), Insights (AI),
+Narrator (AI, four tones), AI Assistant (AI chat that can modify the chart),
+Draw & Annotate, Alternate Views, Sharing.
+
+**Across the whole page:** Page Mode, Page Filters, Compare (A vs B as bands or
+overlays with per-chart change), Linked Highlighting, Pinning, Page Insights &
+Chat (AI), Share, Tool Search (Ctrl-K / Cmd-K).
+
+**Client-side vs AI-powered.** Everything above is client-side except
+Alt. Visualization, Insights, Narrator, AI Assistant and Page Insights & Chat,
+which send chart configuration and data to the Orbit backend.
+
+**Analytics scope, in Highsoft's own words:** anonymous analytics limited to
+tool activation events (for example "opened Forecast tool"); no personal data.
+
+### Portal (self-service, per organization)
+
+| Area | What it controls |
+|---|---|
+| Installations & Keys | Create installations, manage API keys and allowed origins, per-installation activity |
+| Usage & Spending | Live usage and credits, spending caps, rate limits |
+| Branding & Defaults | Org-wide chart theming and defaults pushed to every installation |
+| Team & Access | Members through org admins, optional 2FA requirement |
+
+**Licence:** Orbit Beta 1.0 runs under the Early Access Customer Agreement,
+<https://shop.highcharts.com/license-orbit-1.0>. Beta status means the API, the
+tools and their behaviour can change, and the service can be updated or paused.
+That is a real risk for gloviz.app: the app must keep degrading gracefully if the
+module stops serving.
+
+---
+
 ## How GLOVIZ uses Orbit today
 
 | Where | What |

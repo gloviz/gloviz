@@ -106,3 +106,97 @@ export async function getSources() {
   const { data } = await db.from('sources').select('id, name, attribution').order('tier');
   return data ?? [];
 }
+
+/* ------------------------------------------------------------------ *
+ * Snapshot queries: latest value per series, for ranked bars, maps,
+ * treemaps and scatter plots. Small payloads, passed straight into the
+ * chart config from a server component.
+ * ------------------------------------------------------------------ */
+
+export interface Point {
+  code: string;   // geo code (ISO3 or city/region)
+  name: string;
+  value: number;
+  ts: string;
+}
+
+interface LatestRow {
+  id: number;
+  geo_code: string;
+  title: string;
+  unit: string;
+  external_id: string;
+  series_latest: { ts: string; value: number }[] | { ts: string; value: number } | null;
+}
+
+/** Latest value per geography for one metric (external_id prefix). */
+export async function getLatest(metricPrefix: string): Promise<Point[]> {
+  const db = readClient();
+  const { data } = await db
+    .from('series')
+    .select('id, geo_code, title, unit, external_id, series_latest(ts, value)')
+    .like('external_id', `${metricPrefix}%`)
+    .limit(500);
+  const rows = (data ?? []) as unknown as LatestRow[];
+  const points: Point[] = [];
+  for (const r of rows) {
+    const l = Array.isArray(r.series_latest) ? r.series_latest[0] : r.series_latest;
+    if (!l || l.value === null) continue;
+    points.push({
+      code: r.geo_code,
+      name: r.title.replace(/\s+[A-Z]{2,5}$/, '').trim() === r.title
+        ? r.geo_code
+        : r.title.slice(r.title.lastIndexOf(' ') + 1),
+      value: Number(l.value),
+      ts: l.ts,
+    });
+  }
+  return points.sort((a, b) => b.value - a.value);
+}
+
+/** Latest values for two (optionally three) metrics, joined on geography. */
+export async function getScatter(
+  xMetric: string, yMetric: string, sizeMetric?: string,
+): Promise<{ code: string; x: number; y: number; z?: number }[]> {
+  const [xs, ys, zs] = await Promise.all([
+    getLatest(xMetric),
+    getLatest(yMetric),
+    sizeMetric ? getLatest(sizeMetric) : Promise.resolve([] as Point[]),
+  ]);
+  const yBy = new Map(ys.map((p) => [p.code, p.value]));
+  const zBy = new Map(zs.map((p) => [p.code, p.value]));
+  return xs
+    .filter((p) => yBy.has(p.code))
+    .map((p) => ({
+      code: p.code,
+      x: p.value,
+      y: yBy.get(p.code)!,
+      ...(sizeMetric && zBy.has(p.code) ? { z: zBy.get(p.code)! } : {}),
+    }));
+}
+
+/** Series references for one metric, for multi-series time charts. */
+export async function getSeriesRefs(
+  metricPrefix: string, limit = 14,
+): Promise<{ refs: SeriesRef[]; unit: string; source: string; attribution: string; title: string }> {
+  const db = readClient();
+  const { data } = await db
+    .from('series')
+    .select('id, geo_code, title, unit, frequency, external_id, sources(name, attribution)')
+    .like('external_id', `${metricPrefix}%`)
+    .order('geo_code')
+    .limit(limit);
+  const rows = (data ?? []) as any[];
+  return {
+    refs: rows.map((r) => ({
+      id: r.id,
+      name: r.title.replace(/\s+[A-Z]{2,5}$/, '').trim() === r.title
+        ? r.geo_code
+        : r.title.slice(r.title.lastIndexOf(' ') + 1),
+    })),
+    unit: rows[0]?.unit ?? '',
+    source: rows[0]?.sources?.name ?? '',
+    attribution: rows[0]?.sources?.attribution ?? '',
+    title: (rows[0]?.title ?? '').replace(/\s+[A-Z]{2,5}$/, '').trim(),
+  };
+}

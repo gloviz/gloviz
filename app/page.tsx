@@ -99,7 +99,7 @@ export default async function Home() {
             <p>Every dashboard streams straight from the source. Pick a domain, pick a region: Orbit&apos;s tools work the same everywhere.</p>
           </div>
           <Link className="link" href="/dashboard">
-            All dashboards{' '}
+            All data{' '}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </div>
@@ -112,7 +112,7 @@ export default async function Home() {
             { name: 'Health', icon: 'health', spark: 'health', freq: 'Annual', live: false, desc: '2,000+ WHO indicators and harmonized long-run health series for every country.', tags: ['WHO GHO', 'OWID'] },
             { name: 'Finance', icon: 'finance', spark: 'finance', freq: 'Daily', live: true, desc: 'Daily FX reference rates from the ECB: and every aircraft in the sky, live.', tags: ['ECB', 'OpenSky'] },
           ].map((d) => (
-            <Link key={d.name} className="card dcard" href="/dashboard">
+            <Link key={d.name} className="card dcard" href={`/${d.name.toLowerCase()}`}>
               <div className="dtop">
                 <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[d.icon] }} />
                 <h3>{d.name}</h3>

@@ -34,8 +34,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Highcharts core + modules, then Orbit (must load after; not on npm/CDN) */}
         <Script src="https://code.highcharts.com/highcharts.js" strategy="beforeInteractive" />
         <Script src="https://code.highcharts.com/highcharts-more.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/stock.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/map.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/treemap.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/heatmap.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/streamgraph.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/dumbbell.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/indicators/indicators-all.js" strategy="beforeInteractive" />
         <Script src="https://code.highcharts.com/modules/annotations.js" strategy="beforeInteractive" />
         <Script src="https://code.highcharts.com/modules/exporting.js" strategy="beforeInteractive" />
+        <Script src="https://code.highcharts.com/modules/export-data.js" strategy="beforeInteractive" />
         <Script src="https://code.highcharts.com/modules/accessibility.js" strategy="beforeInteractive" />
         <Script src={`https://orbit.highsoftlabs.com/module/${ORBIT_KEY}/orbit.js`} strategy="beforeInteractive" />
       </head>
@@ -44,11 +52,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="wrap topin">
             <Brand />
             <nav className="nav">
-              <Link href="/dashboard">Dashboard</Link>
-              <Link href="/#domains">Domains</Link>
-              <Link href="/#orbit">Analysis</Link>
-              <Link href="/#sources">Sources</Link>
-              <Link href="/status">Status</Link>
+              <Link href="/economy">Economy</Link>
+              <Link href="/energy">Energy</Link>
+              <Link href="/climate">Climate</Link>
+              <Link href="/environment">Environment</Link>
+              <Link href="/health">Health</Link>
+              <Link href="/finance">Finance</Link>
+              <Link href="/dashboard">All data</Link>
             </nav>
             <div className="actions">
               <ThemeSwitcher />
