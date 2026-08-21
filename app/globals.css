@@ -1,5 +1,12 @@
 
-[data-theme="vinterhav"]{--bg:#f0ece2;--surface:#f9f6ef;--surface2:#e3dccd;--raised:#dde8ef;--line:#1b2a4124;--line-strong:#1b2a4140;--text:#1b2a41;--muted:#45566e;--faint:#7b8a9e;--amber:#d9a05b;--amber-hi:#c98d45;--on-amber:#452c0e;--ice:#33506b}
+[data-theme="vinterhav"]{--bg:#f0ece2;--surface:#f9f6ef;--surface2:#e3dccd;--raised:#dde8ef;
+  --line:#1b2a4124;--line-strong:#1b2a4140;--text:#1b2a41;--muted:#45566e;--faint:#6b7a8e;
+  --amber:#b57b2e;--amber-hi:#98661f;--on-amber:#fdf8ee;--ice:#33506b;
+  /* Series palette for light: the same hues pushed darker. Verified >= 3.0:1
+     against both the card (#f9f6ef) and the page (#f0ece2). */
+  --s1:#33506b;--s2:#b57b2e;--s3:#2f7d62;--s4:#a8443f;
+  --s5:#6a5aa3;--s6:#7d7132;--s7:#2c6ea3;--s8:#96603f;
+  --map-dot:#8ea2b5}
 [data-theme="midnatt"]{--bg:#0b0b0d;--surface:#141417;--surface2:#1c1c20;--raised:#26262b;--line:#33333a;--line-strong:#4a4a53;--text:#ededea;--muted:#9c9ca6;--faint:#6b6b75;--amber:#e0a862;--amber-hi:#eebc7e;--on-amber:#2b1a06;--ice:#8fb3c9}
 [data-theme="kullhav"]{--bg:#121110;--surface:#1b1a18;--surface2:#232120;--raised:#2d2a28;--line:#3a3634;--line-strong:#524d49;--text:#f0ece2;--muted:#a49d93;--faint:#736c64;--amber:#d9a05b;--amber-hi:#e8b477;--on-amber:#2e1c07;--ice:#93b5c9}
 [data-theme="dyphav"]{--bg:#0a1017;--surface:#111a24;--surface2:#18242f;--raised:#20303e;--line:#2a3a49;--line-strong:#3d5164;--text:#e6ecf0;--muted:#93a3b3;--faint:#647587;--amber:#dda765;--amber-hi:#ebbb82;--on-amber:#2b1c07;--ice:#8fb3c9}
@@ -188,3 +195,59 @@ align-items:center;gap:18px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .skiplink:focus{left:0}
 a:focus-visible,button:focus-visible,select:focus-visible,[tabindex]:focus-visible{
   outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
+
+
+/* ------------------------------------------------------------------ *
+ * Orbit and Highcharts theming.
+ * Orbit's toolbar, panels and dialogs read --highcharts-* and --orbit-*
+ * custom properties, so setting them per theme carries Vinterhav and
+ * Dyphav into Orbit's own chrome, not just the plot area.
+ * ------------------------------------------------------------------ */
+:root,
+[data-theme="dyphav"],
+[data-theme="kullhav"],
+[data-theme="midnatt"]{
+  --highcharts-background-color:transparent;
+  --highcharts-neutral-color-100:var(--text);
+  --highcharts-neutral-color-80:var(--text);
+  --highcharts-neutral-color-60:var(--muted);
+  --highcharts-neutral-color-40:var(--faint);
+  --highcharts-neutral-color-20:var(--line-strong);
+  --highcharts-neutral-color-10:var(--line);
+  --highcharts-neutral-color-5:var(--surface2);
+  --highcharts-neutral-color-3:var(--surface);
+  --highcharts-highlight-color-100:var(--amber);
+  --highcharts-highlight-color-80:var(--amber);
+  --highcharts-highlight-color-20:var(--raised);
+  --highcharts-highlight-color-10:var(--surface2);
+  --highcharts-positive-color:var(--s3);
+  --highcharts-negative-color:var(--s4);
+  --highcharts-font-family:"DM Sans",system-ui,sans-serif;
+  --highcharts-color-0:var(--s1);--highcharts-color-1:var(--s2);
+  --highcharts-color-2:var(--s3);--highcharts-color-3:var(--s4);
+  --highcharts-color-4:var(--s5);--highcharts-color-5:var(--s6);
+  --highcharts-color-6:var(--s7);--highcharts-color-7:var(--s8);
+  --orbit-surface:var(--surface);
+  --orbit-surface-muted:var(--surface2);
+  --orbit-text:var(--text);
+  --orbit-text-muted:var(--muted);
+  --orbit-border:var(--line-strong);
+}
+
+/* The Orbit UI inherits the page font and colour, and its panels sit on the
+   card surface rather than the browser default white. */
+.orbit-ui{font-family:"DM Sans",system-ui,sans-serif;color:var(--text)}
+.orbit-ui a{color:var(--ice)}
+
+/* Light mode: elevation comes from a hairline and a soft shadow, not a lighter
+   surface, and the globe needs less opacity to stay a background. */
+[data-theme="vinterhav"] .card,
+[data-theme="vinterhav"] .kpi,
+[data-theme="vinterhav"] .livecard{box-shadow:0 14px 40px #1b2a4114}
+[data-theme="vinterhav"] .livecard{background:color-mix(in srgb,var(--surface) 92%,transparent);
+  box-shadow:0 24px 60px #1b2a411f}
+[data-theme="vinterhav"] .heromap{opacity:.34}
+[data-theme="vinterhav"] .top{background:color-mix(in srgb,var(--bg) 86%,transparent)}
+[data-theme="vinterhav"] .note{background:var(--raised)}
+[data-theme="vinterhav"] .gridwrap .hcg-header-row{background:var(--surface2)}
+[data-theme="vinterhav"] .dot{background:var(--ice);box-shadow:0 0 0 0 var(--ice)}

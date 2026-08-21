@@ -27,6 +27,8 @@ export default function OrbitMap({
   useEffect(() => {
     destroyed.current = false;
     let chart: any;
+    const css = (n: string, f: string) =>
+      getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
     (async () => {
       try {
         const H = await ensureHighcharts();
@@ -34,8 +36,6 @@ export default function OrbitMap({
           'https://code.highcharts.com/mapdata/custom/world.topo.json',
         ).then((r) => r.json());
         if (destroyed.current || !H?.mapChart) return;
-        const css = (n: string, f: string) =>
-          getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
         chart = H.mapChart(chartId, {
           orbit: { enabled: true, id: chartId, tools: ['grid', 'summary', 'distribution', 'kpi', 'contribution', 'insights', 'narrate', 'ai', 'annotate', 'export', 'fullscreen', 'history', 'share'], ...(note ? { llmContext: { text: [note] } } : {}) },
           chart: { map: topology, backgroundColor: 'transparent', height },
@@ -67,8 +67,33 @@ export default function OrbitMap({
         setFailed(true);
       }
     })();
+    const recolor = () => {
+      if (!chart) return;
+      try {
+        chart.update({
+          colorAxis: {
+            minColor: css('--surface2', '#18242f'),
+            maxColor: css('--amber', '#dda765'),
+            labels: { style: { color: css('--muted', '#93a3b3') } },
+          },
+          legend: { itemStyle: { color: css('--muted', '#93a3b3') } },
+          tooltip: {
+            backgroundColor: css('--raised', '#20303e'),
+            style: { color: css('--text', '#e6ecf0') },
+          },
+          series: [{
+            nullColor: css('--surface', '#111a24'),
+            borderColor: css('--line', '#2a3a49'),
+            states: { hover: { borderColor: css('--amber', '#dda765') } },
+          }],
+        }, true, false, false);
+      } catch { /* mid-rebuild */ }
+    };
+    window.addEventListener('gloviz:theme', recolor);
+
     return () => {
       destroyed.current = true;
+      window.removeEventListener('gloviz:theme', recolor);
       try { chart?.destroy(); } catch { /* orbit wraps the chart; ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

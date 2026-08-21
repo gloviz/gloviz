@@ -61,7 +61,20 @@ export default function OrbitChart({
 
     const theme = () => ({
       colors: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css(`--s${i}`, '#8fb3c9')),
-      chart: { backgroundColor: 'transparent', height, style: { fontFamily: '"DM Sans", sans-serif' } },
+      chart: {
+        backgroundColor: 'transparent',
+        height,
+        style: { fontFamily: '"DM Sans", sans-serif', color: css('--text', '#e6ecf0') },
+        plotBorderColor: css('--line', '#2a3a49'),
+        resetZoomButton: {
+          theme: {
+            fill: css('--surface2', '#18242f'),
+            stroke: css('--line-strong', '#3d5164'),
+            style: { color: css('--text', '#e6ecf0') },
+            r: 8,
+          },
+        },
+      },
       title: { text: undefined },
       xAxis: {
         lineColor: css('--line', '#2a3a49'), tickColor: css('--line', '#2a3a49'),
@@ -70,8 +83,11 @@ export default function OrbitChart({
       },
       yAxis: {
         gridLineColor: css('--line', '#2a3a49'),
+        lineColor: css('--line', '#2a3a49'),
+        tickColor: css('--line', '#2a3a49'),
         labels: { style: { color: css('--muted', '#93a3b3'), fontSize: '10px' } },
         title: { text: unit, style: { color: css('--muted', '#93a3b3') } },
+        stackLabels: { style: { color: css('--muted', '#93a3b3'), textOutline: 'none' } },
       },
       legend: {
         itemStyle: { color: css('--muted', '#93a3b3'), fontWeight: '500', fontSize: '11px' },
@@ -82,8 +98,19 @@ export default function OrbitChart({
         borderColor: css('--line-strong', '#3d5164'),
         style: { color: css('--text', '#e6ecf0') },
       },
+      loading: {
+        style: { backgroundColor: css('--surface', '#111a24') },
+        labelStyle: { color: css('--muted', '#93a3b3') },
+      },
+      noData: { style: { color: css('--muted', '#93a3b3'), fontWeight: '500', fontSize: '13px' } },
       plotOptions: {
-        series: { animation: { duration: 400 }, marker: { enabled: false } },
+        series: {
+          animation: { duration: 400 },
+          marker: { enabled: false, lineColor: css('--surface', '#111a24') },
+          states: { inactive: { opacity: 0.25 } },
+          dataLabels: { color: css('--text', '#e6ecf0'), style: { textOutline: 'none' } },
+        },
+        map: { nullColor: css('--surface2', '#18242f') },
         treemap: { dataLabels: { style: { color: css('--text', '#e6ecf0'), textOutline: 'none' } } },
       },
       credits: { enabled: false },
@@ -117,7 +144,13 @@ export default function OrbitChart({
     })();
 
     const recolor = () => {
-      if (chart) chart.update(theme(), true, false, false);
+      // Orbit can rebuild the chart under us; ask Highcharts for the live
+      // instance by container id rather than trusting the closure.
+      const H = (window as any).Highcharts;
+      const live = (H?.charts ?? []).find(
+        (c: any) => c && c.renderTo && c.renderTo.id === chartId,
+      ) ?? chart;
+      try { live?.update(theme(), true, false, false); } catch { /* mid-rebuild */ }
     };
     window.addEventListener('gloviz:theme', recolor);
     return () => {
