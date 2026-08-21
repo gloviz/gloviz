@@ -394,7 +394,10 @@ module stops serving.
 | `app/layout.tsx` | Highcharts + highcharts-more + annotations + exporting + accessibility, then the keyed Orbit module |
 | `components/OrbitChart.tsx` | Every chart is created with `orbit: { enabled: true, id }`, Vinterhav series colours, and recolours on theme switch |
 | `components/OrbitPageMode.tsx` | `orbitPage({ mode: 'augment', pageKey: 'gloviz-dashboard' })` once the charts exist |
-| `app/dashboard/page.tsx` | ~24 charts across economy, energy, climate, environment, health and finance, so relationships, filters and Compare have something to work with |
+| Domain pages | economy, energy, climate, environment, health, finance, markets, nature, transport: each its own page session with a `pageKey` and a declared relationship manifest |
+| `components/OrbitGrid.tsx` | Highcharts Grid Lite opted into Orbit, so tables are page-mode content and filter with the charts. Grid is served from jsDelivr; code.highcharts.com returns 403 for the Grid build |
+| `app/compare/page.tsx` | Pick two countries, every shared metric drawn on one axis, Orbit Compare on top |
+| `app/stories/*` | Curated pages that open with a specific tool already running |
 | KPI tiles | `data-orbit-context` on the front page and dashboard |
 
 **Still to do:** verify `gloviz.app` is on the installation's referrer allowlist;
