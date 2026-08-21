@@ -405,17 +405,22 @@ export interface PairedSeries {
   overlap: number;
 }
 
-async function readSeries(id: number): Promise<{ ts: number; value: number }[]> {
+async function readSeries(id: number, take = 1000): Promise<{ ts: number; value: number }[]> {
   const db = readClient();
+  // PostgREST caps a response at 1000 rows, so read the MOST RECENT window,
+  // not the oldest: two series with different cadences only overlap at the
+  // recent end. Reading ascending here silently produced disjoint windows and
+  // an empty pairing, which is exactly the bug this comment exists to prevent.
   const { data } = await db
     .from('observations')
     .select('ts, value')
     .eq('series_id', id)
-    .order('ts')
-    .limit(20000);
+    .order('ts', { ascending: false })
+    .limit(take);
   return (data ?? [])
     .filter((o: any) => o.value !== null)
-    .map((o: any) => ({ ts: new Date(o.ts).getTime(), value: Number(o.value) }));
+    .map((o: any) => ({ ts: new Date(o.ts).getTime(), value: Number(o.value) }))
+    .reverse();
 }
 
 function pearson(xs: number[], ys: number[]): number {
@@ -446,12 +451,19 @@ export async function getPair(idA: number, idB: number): Promise<PairedSeries | 
   const info = new Map((meta ?? []).map((m: any) => [m.id, m]));
   if (!info.get(idA) || !info.get(idB) || a.length < 3 || b.length < 3) return null;
 
-  const spanA = (a.at(-1)!.ts - a[0].ts) / Math.max(1, a.length - 1);
-  const spanB = (b.at(-1)!.ts - b[0].ts) / Math.max(1, b.length - 1);
+  // Restrict both sides to the window they share, then pair inside it.
+  const from = Math.max(a[0].ts, b[0].ts);
+  const to = Math.min(a.at(-1)!.ts, b.at(-1)!.ts);
+  const aw = a.filter((p) => p.ts >= from && p.ts <= to);
+  const bw = b.filter((p) => p.ts >= from && p.ts <= to);
+  if (aw.length < 3 || bw.length < 3) return null;
+
+  const spanA = (aw.at(-1)!.ts - aw[0].ts) / Math.max(1, aw.length - 1);
+  const spanB = (bw.at(-1)!.ts - bw[0].ts) / Math.max(1, bw.length - 1);
   const tolerance = Math.max(spanA, spanB) * 0.75;
 
-  const dense = a.length >= b.length ? a : b;
-  const sparse = a.length >= b.length ? b : a;
+  const dense = aw.length >= bw.length ? aw : bw;
+  const sparse = aw.length >= bw.length ? bw : aw;
   const scatter: [number, number][] = [];
   const xs: number[] = [], ys: number[] = [];
   let j = 0;
@@ -459,8 +471,8 @@ export async function getPair(idA: number, idB: number): Promise<PairedSeries | 
     while (j + 1 < dense.length && Math.abs(dense[j + 1].ts - p.ts) <= Math.abs(dense[j].ts - p.ts)) j++;
     const q = dense[j];
     if (!q || Math.abs(q.ts - p.ts) > tolerance) continue;
-    const xv = a.length >= b.length ? q.value : p.value;
-    const yv = a.length >= b.length ? p.value : q.value;
+    const xv = aw.length >= bw.length ? q.value : p.value;
+    const yv = aw.length >= bw.length ? p.value : q.value;
     scatter.push([xv, yv]);
     xs.push(xv); ys.push(yv);
   }
