@@ -1,0 +1,40 @@
+/* Dyphav (docs/01-design-system.md). No pure #000/#fff; elevation via lighter surfaces. */
+:root {
+  --bg: #0a1017;
+  --surface: #111a24;
+  --surface2: #18242f;
+  --raised: #20303e;
+  --line: #2a3a49;
+  --line-strong: #3d5164;
+  --text: #e6ecf0;
+  --muted: #93a3b3;
+  --faint: #647587;
+  --amber: #dda765;
+  --ice: #8fb3c9;
+  --on-amber: #2b1c07;
+  --series-1: #8fb3c9; --series-2: #e0a862; --series-3: #7fc4a8; --series-4: #d98b8b;
+  --series-5: #a596d1; --series-6: #d4c88a; --series-7: #6fa8d4; --series-8: #c9997a;
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.6;
+}
+h1, h2, h3 { font-family: Manrope, system-ui, sans-serif; font-weight: 600; letter-spacing: -.05em; }
+h1 em, h2 em { color: var(--amber); font-style: normal; }
+a { color: var(--ice); }
+main { max-width: 1080px; margin: 0 auto; padding: 48px 24px; }
+.vh-card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 24px; }
+.vh-kicker {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .15em; color: var(--muted);
+}
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 500; }
+.status-success { color: var(--series-3); }
+.status-error { color: var(--series-4); }
+.status-partial, .status-running { color: var(--amber); }
+.attribution { color: var(--faint); font-size: 12px; margin-top: 8px; }
