@@ -54,11 +54,7 @@ export async function getSeriesGroups(limit = 24): Promise<SeriesGroup[]> {
         series: [],
       });
     }
-    const g = groups.get(key)!;
-    const name = r.title.replace(/\s+[A-Z]{2,5}$/, '').trim() === r.title
-      ? r.geo_code
-      : r.title.slice(r.title.lastIndexOf(' ') + 1);
-    g.series.push({ id: r.id, name });
+    groups.get(key)!.series.push({ id: r.id, name: r.title });
   }
 
   const ordered = [...groups.values()]
@@ -107,6 +103,23 @@ export async function getSources() {
   return data ?? [];
 }
 
+
+/**
+ * Series in one group share a metric prefix ("Temperature Oslo", "Temperature
+ * Berlin"). The distinguishing part is what belongs in a legend, so strip the
+ * longest shared word prefix; when nothing is shared, keep the whole title.
+ */
+function shortLabels(titles: string[]): string[] {
+  if (titles.length < 2) return titles;
+  const words = titles.map((t) => t.split(/\s+/));
+  let shared = 0;
+  while (
+    shared < words[0].length - 1 &&
+    words.every((w) => w.length > shared + 1 && w[shared] === words[0][shared])
+  ) shared += 1;
+  return words.map((w) => w.slice(shared).join(' '));
+}
+
 /* ------------------------------------------------------------------ *
  * Snapshot queries: latest value per series, for ranked bars, maps,
  * treemaps and scatter plots. Small payloads, passed straight into the
@@ -138,19 +151,15 @@ export async function getLatest(metricPrefix: string): Promise<Point[]> {
     .like('external_id', `${metricPrefix}%`)
     .limit(500);
   const rows = (data ?? []) as unknown as LatestRow[];
-  const points: Point[] = [];
-  for (const r of rows) {
+  const usable = rows.filter((r) => {
     const l = Array.isArray(r.series_latest) ? r.series_latest[0] : r.series_latest;
-    if (!l || l.value === null) continue;
-    points.push({
-      code: r.geo_code,
-      name: r.title.replace(/\s+[A-Z]{2,5}$/, '').trim() === r.title
-        ? r.geo_code
-        : r.title.slice(r.title.lastIndexOf(' ') + 1),
-      value: Number(l.value),
-      ts: l.ts,
-    });
-  }
+    return l && l.value !== null;
+  });
+  const labels = shortLabels(usable.map((r) => r.title));
+  const points: Point[] = usable.map((r, i) => {
+    const l = (Array.isArray(r.series_latest) ? r.series_latest[0] : r.series_latest)!;
+    return { code: r.geo_code, name: labels[i], value: Number(l.value), ts: l.ts };
+  });
   return points.sort((a, b) => b.value - a.value);
 }
 
@@ -187,13 +196,9 @@ export async function getSeriesRefs(
     .order('geo_code')
     .limit(limit);
   const rows = (data ?? []) as any[];
+  const labels = shortLabels(rows.map((r) => r.title));
   return {
-    refs: rows.map((r) => ({
-      id: r.id,
-      name: r.title.replace(/\s+[A-Z]{2,5}$/, '').trim() === r.title
-        ? r.geo_code
-        : r.title.slice(r.title.lastIndexOf(' ') + 1),
-    })),
+    refs: rows.map((r, i) => ({ id: r.id, name: labels[i] })),
     unit: rows[0]?.unit ?? '',
     source: rows[0]?.sources?.name ?? '',
     attribution: rows[0]?.sources?.attribution ?? '',
