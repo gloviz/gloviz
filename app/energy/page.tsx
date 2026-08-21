@@ -8,6 +8,14 @@ import { columnSeries, scatterSeries } from '@/lib/charts';
 export const revalidate = 300;
 
 export default async function Energy() {
+  const [dayAhead, dkCo2, dkLive, ukActual, ukForecast, ukMix] = await Promise.all([
+    getSeriesRefs('eds:dayahead:', 12),
+    getSeriesRefs('eds:co2:', 4),
+    getSeriesRefs('eds:live:', 6),
+    getSeriesRefs('ci:intensity:actual', 1),
+    getSeriesRefs('ci:intensity:forecast', 1),
+    getSeriesRefs('ci:mix:', 9),
+  ]);
   const [renewShare, useCap, solar, renewSeries, useSeries, mix] = await Promise.all([
     getLatest('share-electricity-renewables:'),
     getLatest('per-capita-energy-use:'),
@@ -20,7 +28,7 @@ export default async function Energy() {
   return (
     <DomainPage
       pageKey="gloviz-energy"
-      charts={6}
+      charts={10}
       kicker="Energy · OWID, World Bank, NASA POWER"
       title="Watts," accent="where they come from."
       icon="zap"
@@ -32,6 +40,81 @@ export default async function Energy() {
         { label: 'Solar sites', value: String(solar.refs.length) },
       ]}
     >
+      <OrbitChart
+        chartId="ene-dayahead"
+        title="Day-ahead power prices"
+        subtitle="Energi Data Service · hourly · EUR/MWh · anomaly detection open"
+        unit="EUR/MWh"
+        iconHtml={ICONS.zap}
+        attribution="Source: Energi Data Service, Energinet"
+        series={dayAhead.refs}
+        type="line"
+        initialTool="anomaly"
+        live
+        note="Nordic and German bidding zones, republished by Energinet from the day-ahead auction. Prices can be negative when there is more wind than demand."
+        height={440}
+      />
+
+      <OrbitChart
+        chartId="ene-dkco2"
+        title="Grid CO2 intensity, every five minutes"
+        subtitle="Energi Data Service · 5 minutes · g/kWh · the fastest series in GLOVIZ"
+        unit="g/kWh"
+        iconHtml={ICONS.environment}
+        attribution="Source: Energi Data Service, Energinet"
+        series={dkCo2.refs}
+        type="line"
+        initialTool="control-limits"
+        live
+        note="Carbon intensity of Danish electricity. It falls when the wind blows and rises when thermal plants cover the gap."
+        height={400}
+      />
+
+      <OrbitChart
+        chartId="ene-uk"
+        title="Forecast against outcome, the UK grid"
+        subtitle="National Grid · 30 minutes · gCO2/kWh · the operator's own forecast, next to what happened"
+        unit="gCO2/kWh"
+        iconHtml={ICONS.forecast}
+        attribution="Source: National Grid ESO Carbon Intensity API"
+        series={[...ukActual.refs, ...ukForecast.refs]}
+        type="spline"
+        initialTool="correlations"
+        live
+        note="The only source here that publishes its own forecast alongside the actual value. Running Orbit's Forecast on the actual line puts a statistical projection next to an operator's."
+        height={420}
+      />
+
+      <OrbitChart
+        chartId="ene-dklive"
+        title="The Danish power system, minute by minute"
+        subtitle="Energi Data Service · 1 minute · MW · stacked generation"
+        unit="MW"
+        iconHtml={ICONS.zap}
+        attribution="Source: Energi Data Service, Energinet"
+        series={dkLive.refs}
+        type="areaspline"
+        initialTool="contribution"
+        extraOptions={{ plotOptions: { areaspline: { stacking: 'normal', fillOpacity: 0.35, lineWidth: 1 } } }}
+        live
+        height={400}
+      />
+
+      <OrbitChart
+        chartId="ene-ukmix"
+        title="UK generation mix right now"
+        subtitle="National Grid · % of generation · one snapshot per run"
+        unit="% of generation"
+        iconHtml={ICONS.summary}
+        attribution="Source: National Grid ESO Carbon Intensity API"
+        series={ukMix.refs}
+        type="column"
+        initialTool="contribution"
+        extraOptions={{ plotOptions: { column: { stacking: 'percent', borderWidth: 0 } } }}
+        live
+        height={360}
+      />
+
       <OrbitMap
         chartId="ene-map"
         title="Renewable share of electricity"

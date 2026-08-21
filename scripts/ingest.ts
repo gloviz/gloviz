@@ -15,6 +15,9 @@ import { oecd } from '../lib/adapters/oecd';
 import { gbifOccurrences } from '../lib/adapters/gbif';
 import { openskyFlights } from '../lib/adapters/opensky';
 import { imf } from '../lib/adapters/imf';
+import { energiDataService } from '../lib/adapters/energidataservice';
+import { carbonIntensity } from '../lib/adapters/carbonintensity';
+import { ssb } from '../lib/adapters/ssb';
 
 export const ADAPTERS: Adapter[] = [
   entsoeDayAhead,
@@ -32,6 +35,9 @@ export const ADAPTERS: Adapter[] = [
   gbifOccurrences,
   openskyFlights,
   imf,
+  energiDataService,
+  carbonIntensity,
+  ssb,
 ];
 
 const CHUNK = 5000;
