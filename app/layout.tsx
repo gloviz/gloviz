@@ -15,7 +15,7 @@ const ORBIT_KEY = process.env.NEXT_PUBLIC_ORBIT_API_KEY ?? '5150599f-09f3-4b54-a
 
 function Brand({ small }: { small?: boolean }) {
   return (
-    <Link href="/" className="brand" style={small ? { fontSize: 14 } : undefined}>
+    <Link href="/" className="brand" style={small ? { fontSize: 17 } : undefined}>
       <span className="mark" dangerouslySetInnerHTML={{ __html: MARK_SVG }} />
       GLOVIZ
     </Link>
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
         {/* Highcharts core + modules, then Orbit (must load after; not on npm/CDN) */}

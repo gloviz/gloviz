@@ -22,8 +22,9 @@ a{color:inherit;text-decoration:none}
 .top{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--bg) 82%,transparent);
 backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .topin{display:flex;align-items:center;gap:26px;padding:14px 0}
-.brand{display:flex;align-items:center;gap:9px;font-family:"Manrope";font-weight:700;font-size:20px;letter-spacing:-.03em}
-.mark{width:26px;height:26px;color:var(--text);flex:none}
+.brand{display:flex;align-items:center;gap:11px;font-family:"Manrope";font-weight:800;font-size:26px;letter-spacing:-.03em}
+.mark{width:38px;height:38px;color:var(--text);flex:none;display:inline-flex}
+.mark svg{width:100%;height:100%}
 .nav{display:flex;gap:20px;margin-left:6px}
 .nav a{font-size:13px;font-weight:600;color:var(--muted)} .nav a:hover{color:var(--text)}
 .actions{margin-left:auto;display:flex;align-items:center;gap:10px}
