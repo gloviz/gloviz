@@ -47,8 +47,10 @@ export default async function Home() {
             </a>
           </div>
         </div>
-        <div className="heromap" aria-hidden dangerouslySetInnerHTML={{ __html: HERO_MAP_SVG }} />
-        <LiveNow items={live} />
+        <div className="herostage">
+          <div className="heromap" aria-hidden dangerouslySetInnerHTML={{ __html: HERO_MAP_SVG }} />
+          <LiveNow items={live} />
+        </div>
       </section>
 
       <div className="wrap">
