@@ -34,14 +34,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="top">
           <div className="wrap topin">
             <Brand />
-            <nav className="nav">
-              <Link href="/economy">Economy</Link>
-              <Link href="/energy">Energy</Link>
-              <Link href="/climate">Climate</Link>
-              <Link href="/environment">Environment</Link>
-              <Link href="/health">Health</Link>
-              <Link href="/finance">Finance</Link>
-            </nav>
             <div className="actions">
               <ThemeSwitcher />
             </div>
