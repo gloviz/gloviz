@@ -82,8 +82,24 @@ export default function OrbitChart({
         series: series.map((s, i) => ({ type, name: s.name, data: data[i] ?? [] })),
       });
     })();
+    const recolor = () => {
+      if (!chart) return;
+      const css = (name: string, fallback: string) =>
+        getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+      chart.update({
+        colors: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css(`--s${i}`, '#8fb3c9')),
+        title: { style: { color: css('--text', '#e6ecf0') } },
+        subtitle: { style: { color: css('--muted', '#93a3b3') } },
+        xAxis: { lineColor: css('--line', '#2a3a49'), tickColor: css('--line', '#2a3a49'), labels: { style: { color: css('--muted', '#93a3b3') } } },
+        yAxis: { gridLineColor: css('--line', '#2a3a49'), title: { style: { color: css('--muted', '#93a3b3') } }, labels: { style: { color: css('--muted', '#93a3b3') } } },
+        legend: { itemStyle: { color: css('--muted', '#93a3b3') }, itemHoverStyle: { color: css('--text', '#e6ecf0') } },
+        tooltip: { backgroundColor: css('--raised', '#20303e'), style: { color: css('--text', '#e6ecf0') }, borderColor: css('--line-strong', '#3d5164') },
+      }, true, false, false);
+    };
+    window.addEventListener('gloviz:theme', recolor);
     return () => {
       destroyed.current = true;
+      window.removeEventListener('gloviz:theme', recolor);
       try { chart?.destroy(); } catch { /* orbit wraps the chart; ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
