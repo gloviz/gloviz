@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import OrbitChart from '@/components/OrbitChart';
 import { HERO_MAP_SVG, CTA_MAP_SVG } from '@/lib/artwork';
-import OrbitPageMode from '@/components/OrbitPageMode';
-import { getKpis, getSeriesGroups, getSources } from '@/lib/queries';
+import { getKpis, getSources } from '@/lib/queries';
 import { ICONS, SPARKS } from '@/lib/icons';
 
 export const revalidate = 300;
@@ -20,14 +18,8 @@ const NAME_MAP: Record<string, string> = {
 };
 
 export default async function Home() {
-  const [kpis, groups, sources] = await Promise.all([
-    getKpis(), getSeriesGroups(), getSources(),
-  ]);
+  const [kpis, sources] = await Promise.all([getKpis(), getSources()]);
   const integrated = new Set(sources.map((s) => NAME_MAP[s.name] ?? s.name));
-  const hero =
-    groups.find((g) => g.title.startsWith('Day-ahead')) ??
-    groups.find((g) => g.title.startsWith('Temperature')) ??
-    groups[0];
   const fmt = (n: number) =>
     n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
 
@@ -76,21 +68,6 @@ export default async function Home() {
         </div>
       </div>
 
-      {hero && (
-        <section className="wrap sec">
-          <OrbitChart
-            chartId="hero-chart"
-            iconHtml={hero.domain === 'energy' ? ICONS.zap : ICONS.climate}
-            live
-            title={hero.title}
-            subtitle={hero.subtitle}
-            unit={hero.unit}
-            series={hero.series}
-            attribution={`Source: ${hero.attribution}`}
-            height={380}
-          />
-        </section>
-      )}
 
       <section className="wrap sec" id="domains">
         <div className="shead">
@@ -195,7 +172,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <OrbitPageMode pageKey="gloviz-front" expectedCharts={1} />
-    </main>
+          </main>
   );
 }
