@@ -29,6 +29,8 @@ export default function OrbitChart({
   height = 360,
   initialTool,
   menuVisibility = 'always',
+  iconHtml,
+  live,
 }: {
   chartId: string;
   title: string;
@@ -40,6 +42,8 @@ export default function OrbitChart({
   height?: number;
   initialTool?: string;
   menuVisibility?: 'always' | 'auto' | 'compact';
+  iconHtml?: string;
+  live?: boolean;
 }) {
   const destroyed = useRef(false);
 
@@ -60,8 +64,7 @@ export default function OrbitChart({
         orbit: { enabled: true, id: chartId, menuVisibility, ...(initialTool ? { initialTool } : {}) },
         chart: { type, backgroundColor: 'transparent', height, styledMode: false },
         colors: palette,
-        title: { text: title, align: 'left', style: { color: css('--text', '#e6ecf0'), fontFamily: 'Manrope', fontWeight: '600', fontSize: '15px', letterSpacing: '-.02em' } },
-        subtitle: subtitle ? { text: subtitle, align: 'left', style: { color: css('--muted', '#93a3b3'), fontSize: '11px' } } : undefined,
+        title: { text: undefined as any, align: 'left', style: { color: css('--text', '#e6ecf0'), fontFamily: 'Manrope', fontWeight: '600', fontSize: '15px', letterSpacing: '-.02em' } },
         xAxis: {
           type: 'datetime',
           lineColor: css('--line', '#2a3a49'),
@@ -107,7 +110,15 @@ export default function OrbitChart({
 
   return (
     <div className="card chartwrap">
-      <div id={chartId} style={{ minHeight: height }} />
+      <div className="ch">
+        {iconHtml && <span className="chip" dangerouslySetInnerHTML={{ __html: iconHtml }} />}
+        <div>
+          <b>{title}</b>
+          {subtitle && <small>{subtitle}</small>}
+        </div>
+        {live && <span className="live"><span className="dot" /> Live</span>}
+      </div>
+      <div id={chartId} style={{ minHeight: height, marginTop: 8 }} />
       <div className="cfoot"><span>{attribution}</span></div>
     </div>
   );

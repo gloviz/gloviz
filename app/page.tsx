@@ -2,6 +2,7 @@ import Link from 'next/link';
 import OrbitChart from '@/components/OrbitChart';
 import { HERO_MAP_SVG, CTA_MAP_SVG } from '@/lib/artwork';
 import { getKpis, getSeriesGroups, getSources } from '@/lib/queries';
+import { ICONS, SPARKS } from '@/lib/icons';
 
 export const revalidate = 300;
 
@@ -75,6 +76,8 @@ export default async function Home() {
         <section className="wrap sec">
           <OrbitChart
             chartId="hero-chart"
+            iconHtml={hero.key === 'power' ? ICONS.zap : ICONS.climate}
+            live
             title={hero.title}
             subtitle={hero.subtitle}
             unit={hero.unit}
@@ -99,19 +102,21 @@ export default async function Home() {
         </div>
         <div className="grid3">
           {[
-            { name: 'Economy', freq: 'Annual', live: false, desc: 'GDP, population and 16,000 indicators for every country in the World Bank catalog.', tags: ['World Bank', 'FRED', 'OECD'] },
-            { name: 'Energy', freq: 'Hourly', live: true, desc: 'Prices, generation mix and cross-border flows for ~35 European countries, hour by hour.', tags: ['ENTSO-E', 'Eurostat'] },
-            { name: 'Climate', freq: 'Hourly', live: true, desc: 'Hourly conditions, forecasts and decades of climate history for any coordinate on Earth.', tags: ['Open-Meteo', 'NASA POWER'] },
-            { name: 'Environment', freq: 'Real-time', live: true, desc: 'Every M4.5+ earthquake on the planet, minutes after it happens, plus air quality to come.', tags: ['USGS', 'OpenAQ'] },
-            { name: 'Health', freq: 'Annual', live: false, desc: '2,000+ WHO indicators and harmonized long-run health series for every country.', tags: ['WHO GHO', 'OWID'] },
-            { name: 'Finance', freq: 'Daily', live: true, desc: 'Daily FX reference rates from the ECB: and every aircraft in the sky, live.', tags: ['ECB', 'OpenSky'] },
+            { name: 'Economy', icon: 'economy', spark: 'economy', freq: 'Annual', live: false, desc: 'GDP, population and 16,000 indicators for every country in the World Bank catalog.', tags: ['World Bank', 'FRED', 'OECD'] },
+            { name: 'Energy', icon: 'zap', spark: 'energy', freq: 'Hourly', live: true, desc: 'Prices, generation mix and cross-border flows for ~35 European countries, hour by hour.', tags: ['ENTSO-E', 'Eurostat'] },
+            { name: 'Climate', icon: 'climate', spark: 'climate', freq: 'Hourly', live: true, desc: 'Hourly conditions, forecasts and decades of climate history for any coordinate on Earth.', tags: ['Open-Meteo', 'NASA POWER'] },
+            { name: 'Environment', icon: 'environment', spark: 'environment', freq: 'Real-time', live: true, desc: 'Every M4.5+ earthquake on the planet, minutes after it happens, plus air quality to come.', tags: ['USGS', 'OpenAQ'] },
+            { name: 'Health', icon: 'health', spark: 'health', freq: 'Annual', live: false, desc: '2,000+ WHO indicators and harmonized long-run health series for every country.', tags: ['WHO GHO', 'OWID'] },
+            { name: 'Finance', icon: 'finance', spark: 'finance', freq: 'Daily', live: true, desc: 'Daily FX reference rates from the ECB: and every aircraft in the sky, live.', tags: ['ECB', 'OpenSky'] },
           ].map((d) => (
             <Link key={d.name} className="card dcard" href="/dashboard">
               <div className="dtop">
+                <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[d.icon] }} />
                 <h3>{d.name}</h3>
                 <span className="freq">{d.live && <span className="dot" />}{d.freq}</span>
               </div>
               <p>{d.desc}</p>
+              <span className="spark" dangerouslySetInnerHTML={{ __html: SPARKS[d.spark] }} />
               <div className="dtags">
                 {d.tags.map((t) => (
                   <span key={t} className={integrated.has(t) ? 'pill on' : 'pill'}>{t}</span>
@@ -139,12 +144,13 @@ export default async function Home() {
           </div>
           <div className="ofeats">
             {[
-              ['Anomaly Detection', 'Spikes and drops flagged directly on the chart, as they happen.'],
-              ['Forecast', 'Project any series forward, with a fit score for every projection.'],
-              ['Correlations', 'Temperature in Madrid against FX in Frankfurt: measured, not guessed.'],
-              ['AI Insights', 'A ready-to-share brief on what your chart actually means.'],
-            ].map(([b, p]) => (
+              ['Anomaly Detection', 'Spikes and drops flagged directly on the chart, as they happen.', 'anomaly'],
+              ['Forecast', 'Project any series forward, with a fit score for every projection.', 'forecast'],
+              ['Correlations', 'Temperature in Madrid against FX in Frankfurt: measured, not guessed.', 'correlations'],
+              ['AI Insights', 'A ready-to-share brief on what your chart actually means.', 'ai'],
+            ].map(([b, p, ic]) => (
               <div key={b} className="ofeat">
+                <span className="oi" dangerouslySetInnerHTML={{ __html: ICONS[ic] }} />
                 <div><b>{b}</b><p>{p}</p></div>
               </div>
             ))}
@@ -166,6 +172,7 @@ export default async function Home() {
           ))}
         </div>
         <div className="note">
+          <span dangerouslySetInnerHTML={{ __html: ICONS.info }} />
           <p><strong>Open by design.</strong> Every dataset keeps its original licence: CC BY, public domain or equivalent: with source attribution rendered in every chart footer, generated from the same metadata that drives the charts.</p>
         </div>
       </section>

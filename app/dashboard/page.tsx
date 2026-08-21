@@ -1,6 +1,7 @@
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
 import { getKpis, getSeriesGroups } from '@/lib/queries';
+import { ICONS } from '@/lib/icons';
 
 export const revalidate = 300;
 
@@ -28,6 +29,8 @@ export default async function Dashboard() {
           <OrbitChart
             key={g.key}
             chartId={`chart-${g.key}`}
+            iconHtml={ICONS[{ temperature: 'climate', fx: 'finance', quakes: 'environment', gdp: 'economy', population: 'economy', power: 'zap' }[g.key] ?? 'economy']}
+            live={['temperature', 'fx', 'quakes', 'power'].includes(g.key)}
             title={g.title}
             subtitle={g.subtitle}
             unit={g.unit}
