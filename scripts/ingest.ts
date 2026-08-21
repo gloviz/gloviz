@@ -1,8 +1,10 @@
 import { writeClient } from '../lib/supabase';
 import { Adapter, FetchWindow } from '../lib/adapters/types';
 import { entsoeDayAhead } from '../lib/adapters/entsoe';
+import { openMeteoTemperature } from '../lib/adapters/openmeteo';
+import { worldBankIndicators } from '../lib/adapters/worldbank';
 
-export const ADAPTERS: Adapter[] = [entsoeDayAhead];
+export const ADAPTERS: Adapter[] = [entsoeDayAhead, openMeteoTemperature, worldBankIndicators];
 
 const CHUNK = 5000;
 
@@ -91,6 +93,11 @@ async function main(): Promise<void> {
   // One broken adapter does not stop the others; process still exits non-zero.
   let failed = false;
   for (const adapter of selected) {
+    const missing = (adapter.requiredEnv ?? []).filter((k) => !process.env[k]);
+    if (missing.length) {
+      console.warn(`${adapter.job}: skipped, missing env ${missing.join(', ')}`);
+      continue;
+    }
     try {
       await runAdapter(adapter, window);
     } catch (err) {

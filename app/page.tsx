@@ -9,9 +9,9 @@ export default async function Home() {
   const { data: series } = await db
     .from('series')
     .select('id, title, geo_code, unit, source_id, sources(attribution)')
-    .eq('domain', 'energy')
+    .order('domain')
     .order('geo_code')
-    .limit(12);
+    .limit(16);
 
   return (
     <main>

@@ -21,5 +21,7 @@ export interface Adapter {
   sourceId: string;
   /** e.g. 'entsoe:day-ahead' */
   job: string;
+  /** env vars that must exist for this adapter to run; missing = skipped with a warning */
+  requiredEnv?: string[];
   fetch(window: FetchWindow): Promise<SeriesPayload[]>;
 }

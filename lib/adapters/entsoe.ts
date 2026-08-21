@@ -93,6 +93,7 @@ export function parseDayAhead(xml: string, zoneEic: string): SeriesPayload | nul
 export const entsoeDayAhead: Adapter = {
   sourceId: 'entsoe',
   job: 'entsoe:day-ahead',
+  requiredEnv: ['ENTSOE_API_TOKEN'],
   async fetch(window: FetchWindow): Promise<SeriesPayload[]> {
     const token = process.env.ENTSOE_API_TOKEN;
     if (!token) throw new Error('ENTSOE_API_TOKEN is not set');
