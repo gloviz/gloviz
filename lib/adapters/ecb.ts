@@ -1,9 +1,12 @@
 import { Adapter, FetchWindow, SeriesPayload } from './types';
 import { fetchWithRetry } from '../fetchWithRetry';
 
-/** ECB daily FX reference rates (SDMX-JSON, no key). */
+/** ECB daily FX reference rates, 20 currencies (SDMX-JSON, no key). */
 
-const CURRENCIES = ['USD', 'GBP', 'NOK', 'SEK', 'CHF', 'JPY'];
+const CURRENCIES = [
+  'USD','GBP','NOK','SEK','DKK','CHF','JPY','CNY','AUD','CAD',
+  'NZD','PLN','CZK','HUF','TRY','BRL','INR','KRW','MXN','ZAR',
+];
 
 export const ecbFx: Adapter = {
   sourceId: 'ecb',
@@ -31,6 +34,7 @@ export const ecbFx: Adapter = {
         geoCode: 'EU',
         unit: `${cur}/EUR`,
         frequency: 'daily',
+        metadata: { currency: cur },
         observations: Object.entries(obs).map(([idx, v]) => ({
           ts: `${dates[Number(idx)].id}T00:00:00Z`,
           value: v?.[0] ?? null,

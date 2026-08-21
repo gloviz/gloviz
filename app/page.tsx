@@ -23,7 +23,10 @@ export default async function Home() {
     getKpis(), getSeriesGroups(), getSources(),
   ]);
   const integrated = new Set(sources.map((s) => NAME_MAP[s.name] ?? s.name));
-  const hero = groups.find((g) => g.key === 'power') ?? groups.find((g) => g.key === 'temperature');
+  const hero =
+    groups.find((g) => g.title.startsWith('Day-ahead')) ??
+    groups.find((g) => g.title.startsWith('Temperature')) ??
+    groups[0];
   const fmt = (n: number) =>
     n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
 
@@ -61,13 +64,13 @@ export default async function Home() {
             <div className="num">{kpis.series}</div>
             <div className="lbl">Live time series</div>
           </div>
+          <div className="kpi" data-orbit-context="Countries and regions covered">
+            <div className="num">{kpis.countries}</div>
+            <div className="lbl">Countries &amp; regions</div>
+          </div>
           <div className="kpi" data-orbit-context="Observations stored">
             <div className="num">{fmt(kpis.observations)}</div>
             <div className="lbl">Observations</div>
-          </div>
-          <div className="kpi" data-orbit-context="Refresh cadence">
-            <div className="num">24/7 <span className="dot" /></div>
-            <div className="lbl">Hourly ingestion</div>
           </div>
         </div>
       </div>
@@ -76,7 +79,7 @@ export default async function Home() {
         <section className="wrap sec">
           <OrbitChart
             chartId="hero-chart"
-            iconHtml={hero.key === 'power' ? ICONS.zap : ICONS.climate}
+            iconHtml={hero.domain === 'energy' ? ICONS.zap : ICONS.climate}
             live
             title={hero.title}
             subtitle={hero.subtitle}

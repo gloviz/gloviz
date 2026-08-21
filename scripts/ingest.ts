@@ -5,8 +5,20 @@ import { openMeteoTemperature } from '../lib/adapters/openmeteo';
 import { worldBankIndicators } from '../lib/adapters/worldbank';
 import { ecbFx } from '../lib/adapters/ecb';
 import { usgsQuakes } from '../lib/adapters/usgs';
+import { owidIndicators } from '../lib/adapters/owid';
+import { whoIndicators } from '../lib/adapters/who';
+import { nasaPower } from '../lib/adapters/nasapower';
 
-export const ADAPTERS: Adapter[] = [entsoeDayAhead, openMeteoTemperature, worldBankIndicators, ecbFx, usgsQuakes];
+export const ADAPTERS: Adapter[] = [
+  entsoeDayAhead,
+  openMeteoTemperature,
+  worldBankIndicators,
+  ecbFx,
+  usgsQuakes,
+  owidIndicators,
+  whoIndicators,
+  nasaPower,
+];
 
 const CHUNK = 5000;
 

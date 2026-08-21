@@ -3,6 +3,11 @@ import OrbitPageMode from '@/components/OrbitPageMode';
 import { getKpis, getSeriesGroups } from '@/lib/queries';
 import { ICONS } from '@/lib/icons';
 
+const DOMAIN_ICON: Record<string, string> = {
+  economy: 'economy', energy: 'zap', climate: 'climate',
+  environment: 'environment', health: 'health', finance: 'finance',
+};
+
 export const revalidate = 300;
 
 export default async function Dashboard() {
@@ -29,8 +34,8 @@ export default async function Dashboard() {
           <OrbitChart
             key={g.key}
             chartId={`chart-${g.key}`}
-            iconHtml={ICONS[{ temperature: 'climate', fx: 'finance', quakes: 'environment', gdp: 'economy', population: 'economy', power: 'zap' }[g.key] ?? 'economy']}
-            live={['temperature', 'fx', 'quakes', 'power'].includes(g.key)}
+            iconHtml={ICONS[DOMAIN_ICON[g.domain] ?? 'economy']}
+            live={['climate', 'energy', 'finance', 'environment'].includes(g.domain)}
             title={g.title}
             subtitle={g.subtitle}
             unit={g.unit}
