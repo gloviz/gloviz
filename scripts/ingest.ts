@@ -3,8 +3,10 @@ import { Adapter, FetchWindow } from '../lib/adapters/types';
 import { entsoeDayAhead } from '../lib/adapters/entsoe';
 import { openMeteoTemperature } from '../lib/adapters/openmeteo';
 import { worldBankIndicators } from '../lib/adapters/worldbank';
+import { ecbFx } from '../lib/adapters/ecb';
+import { usgsQuakes } from '../lib/adapters/usgs';
 
-export const ADAPTERS: Adapter[] = [entsoeDayAhead, openMeteoTemperature, worldBankIndicators];
+export const ADAPTERS: Adapter[] = [entsoeDayAhead, openMeteoTemperature, worldBankIndicators, ecbFx, usgsQuakes];
 
 const CHUNK = 5000;
 
