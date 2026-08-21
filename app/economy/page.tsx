@@ -21,6 +21,8 @@ export default async function Economy() {
 
   return (
     <DomainPage
+      pageKey="gloviz-economy"
+      charts={6}
       kicker="Economy · World Bank · annual"
       title="The money," accent="measured."
       icon="economy"

@@ -19,6 +19,8 @@ export default async function Climate() {
 
   return (
     <DomainPage
+      pageKey="gloviz-climate"
+      charts={6}
       kicker="Climate · Open-Meteo · hourly, UTC"
       title="Thirty cities," accent="hour by hour."
       icon="climate"

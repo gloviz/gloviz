@@ -19,6 +19,8 @@ export default async function Health() {
 
   return (
     <DomainPage
+      pageKey="gloviz-health"
+      charts={6}
       kicker="Health · WHO GHO, World Bank"
       title="Years lived," accent="and years lost."
       icon="health"

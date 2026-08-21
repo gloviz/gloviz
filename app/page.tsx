@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import OrbitChart from '@/components/OrbitChart';
 import { HERO_MAP_SVG, CTA_MAP_SVG } from '@/lib/artwork';
+import OrbitPageMode from '@/components/OrbitPageMode';
 import { getKpis, getSeriesGroups, getSources } from '@/lib/queries';
 import { ICONS, SPARKS } from '@/lib/icons';
 
@@ -44,7 +45,7 @@ export default async function Home() {
             No logins, no exports.
           </p>
           <div className="hactions">
-            <Link href="/dashboard" className="btn amber">Explore the data</Link>
+            <Link href="/climate" className="btn amber">Explore the data</Link>
             <a className="link" href="#orbit">
               See how Orbit works{' '}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -98,8 +99,8 @@ export default async function Home() {
             <h2 style={{ marginTop: 12 }}>One planet, <em>six lenses</em></h2>
             <p>Every dashboard streams straight from the source. Pick a domain, pick a region: Orbit&apos;s tools work the same everywhere.</p>
           </div>
-          <Link className="link" href="/dashboard">
-            All data{' '}
+          <Link className="link" href="/economy">
+            Start with the economy{' '}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </div>
@@ -141,7 +142,7 @@ export default async function Home() {
               entirely in the browser, so nothing leaves your environment.
             </p>
             <div className="hactions" style={{ marginTop: 24 }}>
-              <Link href="/dashboard" className="btn amber">Try it on live data</Link>
+              <Link href="/finance" className="btn amber">Try it on live data</Link>
               <a href="https://www.highcharts.com/products/orbit/" className="btn">What is Orbit?</a>
             </div>
           </div>
@@ -186,14 +187,15 @@ export default async function Home() {
           <div className="kicker">gloviz.app</div>
           <h2 style={{ marginTop: 14 }}>Start with <em>one chart.</em></h2>
           <p className="muted" style={{ margin: '16px auto 26px', maxWidth: '44ch' }}>
-            Open the dashboard and put Orbit&apos;s anomaly detection on a live series.
+            Open a domain and put Orbit&apos;s anomaly detection on a live series.
           </p>
           <div className="hactions" style={{ justifyContent: 'center' }}>
-            <Link href="/dashboard" className="btn amber">Open the app</Link>
+            <Link href="/environment" className="btn amber">Watch the planet shake</Link>
             <Link href="/status" className="btn">API status</Link>
           </div>
         </div>
       </section>
+      <OrbitPageMode pageKey="gloviz-front" expectedCharts={1} />
     </main>
   );
 }

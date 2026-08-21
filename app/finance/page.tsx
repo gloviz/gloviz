@@ -17,6 +17,8 @@ export default async function Finance() {
 
   return (
     <DomainPage
+      pageKey="gloviz-finance"
+      charts={4}
       kicker="Finance · European Central Bank · daily"
       title="Twenty currencies," accent="one reference."
       icon="finance"

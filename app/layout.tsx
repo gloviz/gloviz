@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import Link from 'next/link';
 import './globals.css';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
@@ -30,23 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link
           href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
-        />
-        {/* Highcharts core + modules, then Orbit (must load after; not on npm/CDN) */}
-        <Script src="https://code.highcharts.com/highcharts.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/highcharts-more.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/stock.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/map.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/treemap.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/heatmap.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/streamgraph.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/dumbbell.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/indicators/indicators-all.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/annotations.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/exporting.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/export-data.js" strategy="beforeInteractive" />
-        <Script src="https://code.highcharts.com/modules/accessibility.js" strategy="beforeInteractive" />
-        <Script src={`https://orbit.highsoftlabs.com/module/${ORBIT_KEY}/orbit.js`} strategy="beforeInteractive" />
-      </head>
+        />      </head>
       <body>
         <header className="top">
           <div className="wrap topin">
@@ -58,11 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/environment">Environment</Link>
               <Link href="/health">Health</Link>
               <Link href="/finance">Finance</Link>
-              <Link href="/dashboard">All data</Link>
             </nav>
             <div className="actions">
               <ThemeSwitcher />
-              <Link href="/dashboard" className="btn amber">Open the app</Link>
             </div>
           </div>
         </header>

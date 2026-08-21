@@ -22,6 +22,8 @@ export default async function Environment() {
 
   return (
     <DomainPage
+      pageKey="gloviz-environment"
+      charts={8}
       kicker="Environment · USGS, Our World in Data"
       title="The planet," accent="shaking and warming."
       icon="environment"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ensureHighcharts } from '@/lib/loadHighcharts';
 
 /**
  * World choropleth. Orbit treats a map as its own content kind: the axis-based
@@ -28,11 +29,11 @@ export default function OrbitMap({
     let chart: any;
     (async () => {
       try {
+        const H = await ensureHighcharts();
         const topology = await fetch(
           'https://code.highcharts.com/mapdata/custom/world.topo.json',
         ).then((r) => r.json());
-        if (destroyed.current || !window.Highcharts?.mapChart) return;
-        const H = window.Highcharts;
+        if (destroyed.current || !H?.mapChart) return;
         const css = (n: string, f: string) =>
           getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
         chart = H.mapChart(chartId, {

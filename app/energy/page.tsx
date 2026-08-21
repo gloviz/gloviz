@@ -19,6 +19,8 @@ export default async function Energy() {
 
   return (
     <DomainPage
+      pageKey="gloviz-energy"
+      charts={6}
       kicker="Energy · OWID, World Bank, NASA POWER"
       title="Watts," accent="where they come from."
       icon="zap"

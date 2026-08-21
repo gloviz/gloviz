@@ -131,3 +131,5 @@ align-items:center;gap:18px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 @media(max-width:640px){.grid3{grid-template-columns:1fr}.wrap{padding:0 20px}.orbit,.cta{padding:32px}}
 .spark svg{width:100%;height:auto;display:block}
 .ch .chip svg{width:19px;height:19px}
+.themesw button{display:grid;place-items:center;padding:7px 9px}
+.themesw button svg{width:15px;height:15px;display:block}

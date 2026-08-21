@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { ensureHighcharts } from '@/lib/loadHighcharts';
 
 declare global {
   interface Window { Highcharts: any }
@@ -82,6 +83,7 @@ export default function OrbitChart({
     });
 
     (async () => {
+      const H = await ensureHighcharts();
       let resolved: any[] = staticSeries ?? [];
       if (series?.length) {
         const data = await Promise.all(
@@ -89,8 +91,7 @@ export default function OrbitChart({
         );
         resolved = series.map((s, i) => ({ type, name: s.name, data: data[i] ?? [] }));
       }
-      if (destroyed.current || !window.Highcharts) return;
-      const H = window.Highcharts;
+      if (destroyed.current || !H) return;
       const base = theme();
       chart = H.chart(chartId, H.merge(base, {
         orbit: {
