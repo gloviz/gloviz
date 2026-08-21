@@ -119,7 +119,7 @@ margin-top:30px;font-size:13px;line-height:1.7;display:flex;gap:14px;align-items
 /* cta + footer */
 .cta{margin-top:82px;border-radius:24px;background:var(--surface);border:1px solid var(--line);
 padding:60px;position:relative;overflow:hidden;text-align:center}
-.cta .bg{position:absolute;inset:-20% -6% auto -6%;opacity:.25;pointer-events:none}
+.cta .bg{position:absolute;inset:-30% -10% auto auto;width:60%;opacity:.22;pointer-events:none}
 .cta .bg svg{width:100%;height:auto}
 .cta > *{position:relative}
 .foot{margin-top:70px;border-top:1px solid var(--line);padding:28px 0 50px;display:flex;
