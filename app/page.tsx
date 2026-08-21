@@ -116,9 +116,10 @@ export default async function Home() {
             { name: 'Economy', icon: 'economy', spark: 'economy', freq: 'Annual', live: false, desc: 'GDP, population and 16,000 indicators for every country in the World Bank catalog.', tags: ['World Bank', 'FRED', 'OECD'] },
             { name: 'Energy', icon: 'zap', spark: 'energy', freq: 'Hourly', live: true, desc: 'Prices, generation mix and cross-border flows for ~35 European countries, hour by hour.', tags: ['ENTSO-E', 'Eurostat'] },
             { name: 'Climate', icon: 'climate', spark: 'climate', freq: 'Hourly', live: true, desc: 'Hourly conditions, forecasts and decades of climate history for any coordinate on Earth.', tags: ['Open-Meteo', 'NASA POWER'] },
-            { name: 'Environment', icon: 'environment', spark: 'environment', freq: 'Real-time', live: true, desc: 'Every M4.5+ earthquake on the planet, minutes after it happens, plus air quality to come.', tags: ['USGS', 'OpenAQ'] },
+            { name: 'Environment', icon: 'environment', spark: 'environment', freq: 'Real-time', live: true, desc: 'Every M4+ earthquake on the planet, plus daily PM2.5 and NO2 in twelve cities.', tags: ['USGS', 'OpenAQ'] },
             { name: 'Health', icon: 'health', spark: 'health', freq: 'Annual', live: false, desc: '2,000+ WHO indicators and harmonized long-run health series for every country.', tags: ['WHO GHO', 'OWID'] },
-            { name: 'Finance', icon: 'finance', spark: 'finance', freq: 'Daily', live: true, desc: 'Daily FX reference rates from the ECB: and every aircraft in the sky, live.', tags: ['ECB', 'OpenSky'] },
+            { name: 'Finance', icon: 'finance', spark: 'finance', freq: 'Daily', live: true, desc: 'Twenty ECB reference rates against the euro, every working day.', tags: ['ECB'] },
+            { name: 'Markets', icon: 'forecast', spark: 'economy', freq: 'Daily', live: true, desc: 'Treasury yields, crude, gas, the S&P 500, the VIX and credit spreads from FRED.', tags: ['FRED'] },
           ].map((d) => (
             <Link key={d.name} className="card dcard" href={`/${d.name.toLowerCase()}`}>
               <div className="dtop">

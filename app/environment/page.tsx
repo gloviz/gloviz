@@ -18,12 +18,16 @@ export default async function Environment() {
       getSeriesRefs('quakes:count:', 6),
       getSeriesRefs('annual-co2-emissions-per-country:', 12),
     ]);
+  const [pm25, no2] = await Promise.all([
+    getSeriesRefs('openaq:pm25:', 12),
+    getSeriesRefs('openaq:no2:', 12),
+  ]);
   const regional = { refs: quakeRegions.refs.filter((r) => !/m40/.test(String(r.name))) };
 
   return (
     <DomainPage
       pageKey="gloviz-environment"
-      charts={8}
+      charts={10}
       relationships={{
         dateToleranceMs: 86_400_000,
         links: [
@@ -112,6 +116,35 @@ export default async function Environment() {
         initialTool="control-limits"
         live
         height={320}
+      />
+
+      <OrbitChart
+        chartId="env-pm25"
+        title="PM2.5, twelve cities"
+        subtitle="OpenAQ · daily mean · µg/m³ · anomaly detection open"
+        unit="µg/m³"
+        iconHtml={ICONS.environment}
+        attribution="Source: OpenAQ"
+        series={pm25.refs}
+        type="spline"
+        initialTool="anomaly"
+        live
+        note="Daily means from one reference station per city. The WHO 24-hour guideline is 15 µg/m³."
+        height={400}
+      />
+
+      <OrbitChart
+        chartId="env-no2"
+        title="Nitrogen dioxide, traffic in one number"
+        subtitle="OpenAQ · daily mean · µg/m³ · weekly cycle visible"
+        unit="µg/m³"
+        iconHtml={ICONS.anomaly}
+        attribution="Source: OpenAQ"
+        series={no2.refs}
+        type="line"
+        initialTool="trendline"
+        live
+        height={380}
       />
 
       <OrbitChart

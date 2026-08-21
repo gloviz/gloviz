@@ -2,9 +2,17 @@ name: Ingest
 
 on:
   schedule:
+    # Hourly sources: weather. Runs at :20 past every hour.
     - cron: '20 * * * *'
+    # Daily sources: FX, earthquakes, NASA POWER. 06:40 UTC.
+    - cron: '40 6 * * *'
+    # Annual sources: World Bank, OWID, WHO. Sundays 03:10 UTC.
+    - cron: '10 3 * * 0'
   workflow_dispatch:
     inputs:
+      jobs:
+        description: 'Jobs to run (space separated), empty = all'
+        default: ''
       days:
         description: 'Days to backfill'
         default: '3'
@@ -12,6 +20,7 @@ on:
 jobs:
   ingest:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,8 +28,28 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run ingest -- --days ${{ github.event.inputs.days || '3' }}
+
+      - name: Pick jobs for this trigger
+        id: pick
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "jobs=${{ github.event.inputs.jobs }}" >> "$GITHUB_OUTPUT"
+            echo "days=${{ github.event.inputs.days }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "20 * * * *" ]; then
+            echo "jobs=open-meteo:weather entsoe:day-ahead" >> "$GITHUB_OUTPUT"
+            echo "days=2" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "40 6 * * *" ]; then
+            echo "jobs=ecb:fx usgs:quakes nasa-power:climate" >> "$GITHUB_OUTPUT"
+            echo "days=7" >> "$GITHUB_OUTPUT"
+          else
+            echo "jobs=worldbank:indicators owid:indicators who:indicators" >> "$GITHUB_OUTPUT"
+            echo "days=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm run ingest ${{ steps.pick.outputs.jobs }} -- --days ${{ steps.pick.outputs.days }}
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ENTSOE_API_TOKEN: ${{ secrets.ENTSOE_API_TOKEN }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          OPENAQ_API_KEY: ${{ secrets.OPENAQ_API_KEY }}

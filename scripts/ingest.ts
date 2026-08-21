@@ -8,6 +8,8 @@ import { usgsQuakes } from '../lib/adapters/usgs';
 import { owidIndicators } from '../lib/adapters/owid';
 import { whoIndicators } from '../lib/adapters/who';
 import { nasaPower } from '../lib/adapters/nasapower';
+import { fredSeries } from '../lib/adapters/fred';
+import { openaqAir } from '../lib/adapters/openaq';
 
 export const ADAPTERS: Adapter[] = [
   entsoeDayAhead,
@@ -18,6 +20,8 @@ export const ADAPTERS: Adapter[] = [
   owidIndicators,
   whoIndicators,
   nasaPower,
+  fredSeries,
+  openaqAir,
 ];
 
 const CHUNK = 5000;
