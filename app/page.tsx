@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { HERO_MAP_SVG } from '@/lib/artwork';
-import { getKpis, getSources } from '@/lib/queries';
+import LiveNow from '@/components/LiveNow';
+import { getKpis, getLiveHighlights, getSources } from '@/lib/queries';
 import { ICONS, SPARKS } from '@/lib/icons';
 
 export const revalidate = 300;
@@ -18,7 +19,9 @@ const NAME_MAP: Record<string, string> = {
 };
 
 export default async function Home() {
-  const [kpis, sources] = await Promise.all([getKpis(), getSources()]);
+  const [kpis, sources, live] = await Promise.all([
+    getKpis(), getSources(), getLiveHighlights(),
+  ]);
   const integrated = new Set(sources.map((s) => NAME_MAP[s.name] ?? s.name));
   const fmt = (n: number) =>
     n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
@@ -44,7 +47,8 @@ export default async function Home() {
             </a>
           </div>
         </div>
-        <div className="heromap" dangerouslySetInnerHTML={{ __html: HERO_MAP_SVG }} />
+        <div className="heromap" aria-hidden dangerouslySetInnerHTML={{ __html: HERO_MAP_SVG }} />
+        <LiveNow items={live} />
       </section>
 
       <div className="wrap">

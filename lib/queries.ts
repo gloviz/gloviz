@@ -200,3 +200,72 @@ export async function getSeriesRefs(
     title: (rows[0]?.title ?? '').replace(/\s+[A-Z]{2,5}$/, '').trim(),
   };
 }
+
+/* ------------------------------------------------------------------ *
+ * "Happening now": the freshest value from each fast-moving source,
+ * for the ticker on the front page.
+ * ------------------------------------------------------------------ */
+
+export interface LiveItem {
+  kicker: string;
+  headline: string;
+  detail: string;
+  ts: string;
+  href: string;
+}
+
+const ago = (ts: string) => {
+  const mins = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (mins < 90) return `${Math.max(1, mins)} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 36) return `${hrs} h ago`;
+  return `${Math.round(hrs / 24)} d ago`;
+};
+
+export async function getLiveHighlights(): Promise<LiveItem[]> {
+  const [temps, quakesMag, quakesCount, pm25, fred, fx, solar] = await Promise.all([
+    getLatest('temperature_2m:'),
+    getLatest('quakes:maxmag'),
+    getLatest('quakes:count:m40'),
+    getLatest('openaq:pm25:'),
+    getLatest('fred:'),
+    getLatest('EXR:D.'),
+    getLatest('ALLSKY_SFC_SW_DWN:'),
+  ]);
+  const items: LiveItem[] = [];
+  const push = (i: LiveItem | null) => { if (i) items.push(i); };
+  const one = (
+    arr: Point[], kicker: string, headline: (p: Point) => string,
+    detail: string, href: string, pick: 'first' | 'last' = 'first',
+  ) => {
+    const p = pick === 'first' ? arr[0] : arr.at(-1);
+    return p ? { kicker, headline: headline(p), detail, ts: p.ts, href } : null;
+  };
+
+  push(one(temps, 'Warmest city right now', (p) => `${p.name} ${p.value.toFixed(1)} °C`,
+    'Open-Meteo, hourly', '/climate'));
+  push(one(temps, 'Coldest city right now', (p) => `${p.name} ${p.value.toFixed(1)} °C`,
+    'Open-Meteo, hourly', '/climate', 'last'));
+  push(one(quakesMag, 'Strongest quake today', (p) => `Magnitude ${p.value.toFixed(1)}`,
+    'USGS, M4.0+ worldwide', '/environment'));
+  push(one(quakesCount, 'Earthquakes today', (p) => `${p.value} events, M4.0+`,
+    'USGS, per UTC day', '/stories/quake-week'));
+  push(one(pm25, 'Dirtiest air today', (p) => `${p.name} ${p.value.toFixed(0)} µg/m³ PM2.5`,
+    'OpenAQ, daily mean', '/environment'));
+  push(one(solar, 'Most sunlight today', (p) => `${p.name} ${p.value.toFixed(1)} kWh/m²`,
+    'NASA POWER, daily', '/energy'));
+
+  const fredPick = (needle: string, label: string, fmt: (v: number) => string, href: string) => {
+    const p = fred.find((x) => x.name.toLowerCase().includes(needle));
+    if (p) items.push({ kicker: label, headline: fmt(p.value), detail: 'FRED, daily', ts: p.ts, href });
+  };
+  fredPick('brent', 'Brent crude', (v) => `$${v.toFixed(2)} per barrel`, '/markets');
+  fredPick('vix', 'Market volatility', (v) => `VIX at ${v.toFixed(1)}`, '/markets');
+  fredPick('10-year', 'US 10-year yield', (v) => `${v.toFixed(2)} %`, '/markets');
+
+  const usd = fx.find((p) => p.name.startsWith('USD'));
+  if (usd) items.push({ kicker: 'Euro exchange rate', headline: `$${usd.value.toFixed(4)} per EUR`,
+    detail: 'ECB reference rate', ts: usd.ts, href: '/finance' });
+
+  return items.map((i) => ({ ...i, detail: `${i.detail} · ${ago(i.ts)}` }));
+}
