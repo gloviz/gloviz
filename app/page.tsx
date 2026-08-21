@@ -81,6 +81,33 @@ export default async function Home() {
       </div>
 
 
+      <section className="wrap sec" id="play">
+        <div className="shead">
+          <div>
+            <div className="kicker">Interactive</div>
+            <h2 style={{ marginTop: 12 }}>Ask it <em>yourself</em></h2>
+            <p>Four surfaces built on the same database, each one a different question.</p>
+          </div>
+        </div>
+        <div className="grid3">
+          {[
+            { href: '/explore', icon: 'correlations', tag: 'Explorer', title: 'Any two series', lead: 'Pick two of the 400 longest series from any of the 18 sources. GLOVIZ pairs them on time and computes the correlation.' },
+            { href: '/compare', icon: 'economy', tag: 'Compare', title: 'Up to five countries', lead: 'Every metric that covers all of them, on one axis, with Orbit Compare on top. The selection lives in the URL.' },
+            { href: '/race', icon: 'forecast', tag: 'Race', title: 'The ranking race', lead: 'Drag the year and watch the order change. Rankings move slowly, and then all at once.' },
+            { href: '/surprise', icon: 'ai', tag: 'Surprise', title: 'Surprise me', lead: 'Two series from different institutions, picked at random, correlated anyway. A lesson in how cheap coincidences are.' },
+          ].map((s) => (
+            <Link key={s.href} className="card dcard" href={s.href}>
+              <div className="dtop">
+                <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[s.icon] }} />
+                <h3>{s.title}</h3>
+              </div>
+              <p>{s.lead}</p>
+              <div className="dtags"><span className="pill on">{s.tag}</span></div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="wrap sec" id="stories">
         <div className="shead">
           <div>

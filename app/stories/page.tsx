@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { ICONS } from '@/lib/icons';
+import { getLiveStories } from '@/lib/queries';
+
+export const revalidate = 300;
 
 export const metadata = { title: 'Stories · GLOVIZ' };
 
@@ -27,7 +30,8 @@ const STORIES = [
   },
 ];
 
-export default function Stories() {
+export default async function Stories() {
+  const live = await getLiveStories();
   return (
     <main className="wrap" style={{ paddingTop: 42, paddingBottom: 40 }}>
       <div className="kicker">Curated</div>
@@ -37,7 +41,23 @@ export default function Stories() {
         question. Everything stays live: the charts read the same database the
         rest of the site does.
       </p>
-      <div className="grid3" style={{ marginTop: 28 }}>
+      <div className="kicker" style={{ marginTop: 30 }}>Written from live data, updated every five minutes</div>
+      <div className="grid3" style={{ marginTop: 14 }}>
+        {live.map((s) => (
+          <Link key={s.slug} className="card dcard" href={`/stories/${s.slug}`}>
+            <div className="dtop">
+              <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[s.icon] }} />
+              <h3>{s.title} {s.accent}</h3>
+              <span className="freq"><span className="dot" />Live</span>
+            </div>
+            <p>{s.headline}</p>
+            <div className="dtags"><span className="pill on">{s.domain}</span></div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="kicker" style={{ marginTop: 34 }}>Editorial, written once</div>
+      <div className="grid3" style={{ marginTop: 14 }}>
         {STORIES.map((s) => (
           <Link key={s.slug} className="card dcard" href={`/stories/${s.slug}`}>
             <div className="dtop">
