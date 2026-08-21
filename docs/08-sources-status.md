@@ -20,15 +20,41 @@ against Supabase on 2026-08-21.
 | OpenAQ | 1 | 23 | Daily | PM2.5, PM10, NO2 in 12 cities |
 | USGS | 1 | 7 | Daily | M4.0+ counts, max magnitude, energy, per region |
 | OpenSky | 1 | 12 | Hourly snapshots | **Non-commercial only.** Each run appends one point |
+| IMF | 1 | ~140 | Monthly, annual | CPI index and rate, plus WEO with published forecasts |
 
-**Totals: 14 sources, 1,140 series, ~356,000 observations.**
+**Totals: 15 sources, ~1,280 series, ~373,000 observations.**
 
 ## Blocked or dropped
 
 | Source | Status |
 |---|---|
 | **ENTSO-E** | Adapter written and tested; waiting on the API token, which is issued by email. The adapter declares `requiredEnv: ['ENTSOE_API_TOKEN']` and skips itself with a warning until the secret exists. |
-| **IMF** | Dropped for now. The current api.imf.org SDMX 2.1 service returns 404 for the IFS and CPI dataflows we need, and the legacy `dataservices.imf.org` host is unreachable. Revisit when the new API stabilises; the SDMX parser is already in place. |
+| **IMF** | **Solved.** See below. |
+
+## IMF: what actually works
+
+The first attempt failed and the reasons are worth keeping:
+
+1. The legacy `dataservices.imf.org` host is gone, and **IFS is no longer a
+   dataflow**. The current flows are `IMF.STA:CPI(5.0.0)` and
+   `IMF.RES:WEO(9.0.0)`; the version is mandatory in the path.
+2. The SDMX **2.1** data endpoint returns HTTP 500 for these flows.
+3. The SDMX **3.0** JSON endpoint answers 200 but every observation is null.
+4. **SDMX-CSV 2.0 on the 3.0 endpoint is the format that returns numbers.**
+
+```
+GET https://api.imf.org/external/sdmx/3.0/data/dataflow/IMF.STA/CPI/5.0.0/
+    NOR+SWE.CPI._T.IX.M?c[TIME_PERIOD]=ge:2010-01
+Accept: application/vnd.sdmx.data+csv;version=2.0
+```
+
+Periods come back as `2026-M07`, handled by `sdmxPeriodToIso`. The CSV parser
+lives next to the JSON one in `lib/parsers/sdmx.ts` and is unit tested against
+quoted cells, empty values and unparseable numbers.
+
+WEO is the only global dataset here that ships a **published forecast**, so its
+lines deliberately run past today. That makes it the natural counterpart to
+Orbit's own Forecast tool: the IMF's projection against a statistical one.
 
 ## Reuse that paid off
 

@@ -42,7 +42,7 @@ jobs:
             echo "jobs=ecb:fx usgs:quakes nasa-power:climate" >> "$GITHUB_OUTPUT"
             echo "days=7" >> "$GITHUB_OUTPUT"
           else
-            echo "jobs=worldbank:indicators owid:indicators who:indicators eurostat:indicators oecd:indicators gbif:occurrences" >> "$GITHUB_OUTPUT"
+            echo "jobs=worldbank:indicators owid:indicators who:indicators eurostat:indicators oecd:indicators gbif:occurrences imf:indicators" >> "$GITHUB_OUTPUT"
             echo "days=1" >> "$GITHUB_OUTPUT"
           fi
 

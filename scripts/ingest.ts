@@ -14,6 +14,7 @@ import { eurostat } from '../lib/adapters/eurostat';
 import { oecd } from '../lib/adapters/oecd';
 import { gbifOccurrences } from '../lib/adapters/gbif';
 import { openskyFlights } from '../lib/adapters/opensky';
+import { imf } from '../lib/adapters/imf';
 
 export const ADAPTERS: Adapter[] = [
   entsoeDayAhead,
@@ -30,6 +31,7 @@ export const ADAPTERS: Adapter[] = [
   oecd,
   gbifOccurrences,
   openskyFlights,
+  imf,
 ];
 
 const CHUNK = 5000;

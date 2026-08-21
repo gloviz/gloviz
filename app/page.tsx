@@ -125,7 +125,7 @@ export default async function Home() {
         </div>
         <div className="grid3">
           {[
-            { name: 'Economy', icon: 'economy', spark: 'economy', freq: 'Annual', live: false, desc: 'GDP, population and 16,000 indicators for every country in the World Bank catalog.', tags: ['World Bank', 'FRED', 'OECD'] },
+            { name: 'Economy', icon: 'economy', spark: 'economy', freq: 'Annual', live: false, desc: 'GDP, inflation and debt from the World Bank, OECD, Eurostat and the IMF, forecasts included.', tags: ['World Bank', 'OECD', 'Eurostat', 'IMF'] },
             { name: 'Energy', icon: 'zap', spark: 'energy', freq: 'Hourly', live: true, desc: 'Prices, generation mix and cross-border flows for ~35 European countries, hour by hour.', tags: ['ENTSO-E', 'Eurostat'] },
             { name: 'Climate', icon: 'climate', spark: 'climate', freq: 'Hourly', live: true, desc: 'Hourly conditions, forecasts and decades of climate history for any coordinate on Earth.', tags: ['Open-Meteo', 'NASA POWER'] },
             { name: 'Environment', icon: 'environment', spark: 'environment', freq: 'Real-time', live: true, desc: 'Every M4+ earthquake on the planet, plus daily PM2.5 and NO2 in twelve cities.', tags: ['USGS', 'OpenAQ'] },

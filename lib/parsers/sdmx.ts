@@ -50,5 +50,42 @@ export function sdmxPeriodToIso(period: string): string | null {
   if (m) return `${p}T00:00:00Z`;
   m = /^(\d{4})M(\d{2})$/.exec(p);
   if (m) return `${m[1]}-${m[2]}-01T00:00:00Z`;
+  // IMF SDMX-CSV writes 2026-M07 and 2026-Q2
+  m = /^(\d{4})-M(\d{2})$/.exec(p);
+  if (m) return `${m[1]}-${m[2]}-01T00:00:00Z`;
   return null;
+}
+
+/**
+ * SDMX-CSV 2.0, the format the IMF's SDMX 3.0 service actually serves reliably
+ * (its JSON responses 500 or come back empty). Header row names the dimensions;
+ * every row is one observation.
+ */
+export function parseSdmxCsv(text: string): SdmxPoint[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const split = (line: string): string[] => {
+    const cells: string[] = [];
+    let cur = '', quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { quoted = !quoted; continue; }
+      if (ch === ',' && !quoted) { cells.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    cells.push(cur);
+    return cells;
+  };
+  const header = split(lines[0]);
+  const out: SdmxPoint[] = [];
+  for (const line of lines.slice(1)) {
+    const cells = split(line);
+    const dims: Record<string, string> = {};
+    header.forEach((h, i) => { if (cells[i]) dims[h] = cells[i]; });
+    const raw = dims.OBS_VALUE;
+    if (raw === undefined) continue;
+    const value = Number(raw);
+    out.push({ dims, value: Number.isFinite(value) ? value : null });
+  }
+  return out;
 }

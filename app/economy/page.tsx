@@ -25,13 +25,18 @@ export default async function Economy() {
     { prefix: 'NE.TRD.GNFS.ZS:', label: 'Trade (% of GDP)' },
     { prefix: 'SP.POP.TOTL:', label: 'Population' },
   ]);
+  const [weoGrowth, weoDebt, imfCpi] = await Promise.all([
+    getSeriesRefs('imf:weo:NGDP_RPCH:', 12),
+    getSeriesRefs('imf:weo:GGXWDG_NGDP:', 12),
+    getSeriesRefs('imf:cpi:YOY_PCH_PA_PT:', 12),
+  ]);
   const attribution = 'Source: World Bank Open Data';
   const fmt = (n?: number) => (n === undefined ? 'n/a' : n.toLocaleString('en', { maximumFractionDigits: 0 }));
 
   return (
     <DomainPage
       pageKey="gloviz-economy"
-      charts={7}
+      charts={10}
       relationships={{
         links: [
           { a: { content: 'econ-map', field: 0 }, b: { content: 'econ-growth', field: 0 } },
@@ -109,6 +114,46 @@ export default async function Economy() {
         tools={['summary', 'contribution', 'kpi', 'insights', 'ai', 'export', 'fullscreen']}
         height={420}
         {...treemapSeries('Population', pop, 30)}
+      />
+
+      <OrbitChart
+        chartId="econ-weo"
+        title="GDP growth, with the IMF's own forecast"
+        subtitle="IMF World Economic Outlook · annual · % · the lines run past today on purpose"
+        unit="% annual"
+        iconHtml={ICONS.forecast}
+        attribution="Source: International Monetary Fund"
+        series={weoGrowth.refs}
+        type="spline"
+        initialTool="forecast"
+        note="WEO carries a published projection, so the last years of each line are the IMF's forecast. Running Orbit's own Forecast on top compares a statistical projection against an institutional one."
+        height={420}
+      />
+
+      <OrbitChart
+        chartId="econ-debt"
+        title="Government debt"
+        subtitle="IMF WEO · annual · % of GDP · anomaly detection open"
+        unit="% of GDP"
+        iconHtml={ICONS.anomaly}
+        attribution="Source: International Monetary Fund"
+        series={weoDebt.refs}
+        type="line"
+        initialTool="anomaly"
+        height={400}
+      />
+
+      <OrbitChart
+        chartId="econ-imfcpi"
+        title="Inflation, monthly, from the IMF"
+        subtitle="IMF CPI · monthly · % annual · a faster read than the annual series"
+        unit="% annual"
+        iconHtml={ICONS.correlations}
+        attribution="Source: International Monetary Fund"
+        series={imfCpi.refs}
+        type="line"
+        initialTool="correlations"
+        height={400}
       />
 
       <OrbitGrid
