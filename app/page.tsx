@@ -81,58 +81,34 @@ export default async function Home() {
       </div>
 
 
-      <section className="wrap sec" id="play">
-        <div className="shead">
+      <section className="wrap sec tight" id="play">
+        <div className="shead tight">
           <div>
-            <div className="kicker">Interactive</div>
-            <h2 style={{ marginTop: 12 }}>Ask it <em>yourself</em></h2>
-            <p>Four surfaces built on the same database, each one a different question.</p>
-          </div>
-        </div>
-        <div className="grid3">
-          {[
-            { href: '/explore', icon: 'correlations', tag: 'Explorer', title: 'Any two series', lead: 'Pick two of the 400 longest series from any of the 18 sources. GLOVIZ pairs them on time and computes the correlation.' },
-            { href: '/compare', icon: 'economy', tag: 'Compare', title: 'Up to five countries', lead: 'Every metric that covers all of them, on one axis, with Orbit Compare on top. The selection lives in the URL.' },
-            { href: '/race', icon: 'forecast', tag: 'Race', title: 'The ranking race', lead: 'Drag the year and watch the order change. Rankings move slowly, and then all at once.' },
-            { href: '/surprise', icon: 'ai', tag: 'Surprise', title: 'Surprise me', lead: 'Two series from different institutions, picked at random, correlated anyway. A lesson in how cheap coincidences are.' },
-          ].map((s) => (
-            <Link key={s.href} className="card dcard" href={s.href}>
-              <div className="dtop">
-                <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[s.icon] }} />
-                <h3>{s.title}</h3>
-              </div>
-              <p>{s.lead}</p>
-              <div className="dtags"><span className="pill on">{s.tag}</span></div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="wrap sec" id="stories">
-        <div className="shead">
-          <div>
-            <div className="kicker">Curated</div>
-            <h2 style={{ marginTop: 12 }}>Stories <em>in the data</em></h2>
-            <p>Each one opens with a specific Orbit tool already running on a specific question.</p>
+            <div className="kicker">Interactive and curated</div>
+            <h2 style={{ marginTop: 10 }}>Ask it <em>yourself</em></h2>
           </div>
           <Link className="link" href="/stories">
             All stories{' '}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </div>
-        <div className="grid3">
+        <div className="tilerow">
           {[
-            { slug: 'heat-and-power', icon: 'climate', tag: 'Climate + energy', title: 'Heat and power', lead: 'Temperature against the solar energy arriving at the same coordinates, correlations open on load.' },
-            { slug: 'the-pandemic-dip', icon: 'health', tag: 'Health', title: 'The pandemic dip', lead: 'Life expectancy fell in 2020 and 2021. The anomaly detector finds it unprompted.' },
-            { slug: 'quake-week', icon: 'environment', tag: 'Environment', title: 'A week of earthquakes', lead: 'Forty M4+ events a day, and the wildly unstable energy that comes with them.' },
-          ].map((st) => (
-            <Link key={st.slug} className="card dcard" href={`/stories/${st.slug}`}>
-              <div className="dtop">
-                <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[st.icon] }} />
-                <h3>{st.title}</h3>
-              </div>
-              <p>{st.lead}</p>
-              <div className="dtags"><span className="pill on">{st.tag}</span></div>
+            { href: '/explore', icon: 'correlations', title: 'Any two series', lead: 'Paired on time, correlation computed' },
+            { href: '/compare', icon: 'economy', title: 'Up to five countries', lead: 'Every shared metric on one axis' },
+            { href: '/race', icon: 'forecast', title: 'Ranking race', lead: 'Drag the year, watch the order change' },
+            { href: '/surprise', icon: 'ai', title: 'Surprise me', lead: 'Two unrelated sources, correlated anyway' },
+            { href: '/stories/heat-and-power', icon: 'climate', title: 'Heat and power', lead: 'Temperature against solar irradiance' },
+            { href: '/stories/the-pandemic-dip', icon: 'health', title: 'The pandemic dip', lead: 'Life expectancy fell in 2020' },
+            { href: '/stories/quake-week', icon: 'environment', title: 'A week of earthquakes', lead: 'Forty M4+ events a day' },
+            { href: '/stories', icon: 'summary', title: 'Live stories', lead: 'Written from the freshest data' },
+          ].map((t) => (
+            <Link key={t.href} className="tile" href={t.href}>
+              <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[t.icon] }} />
+              <span className="tiletext">
+                <b>{t.title}</b>
+                <small>{t.lead}</small>
+              </span>
             </Link>
           ))}
         </div>
