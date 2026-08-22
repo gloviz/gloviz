@@ -29,6 +29,18 @@ export default function OrbitMap({
     let chart: any;
     const css = (n: string, f: string) =>
       getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
+    // Zoom +/- buttons take SVG attributes plus tri-state styles
+    // (api.highcharts.com/highmaps/mapNavigation.buttonOptions.theme).
+    // Without this they keep default colors, which read as the wrong theme.
+    const navTheme = () => ({
+      fill: css('--surface2', '#18242f'),
+      stroke: css('--line-strong', '#3d5164'),
+      style: { color: css('--text', '#e6ecf0') },
+      states: {
+        hover: { fill: css('--raised', '#20303e'), style: { color: css('--text', '#e6ecf0') } },
+        select: { fill: css('--raised', '#20303e'), style: { color: css('--text', '#e6ecf0') } },
+      },
+    });
     (async () => {
       try {
         const H = await ensureHighcharts();
@@ -41,7 +53,7 @@ export default function OrbitMap({
           chart: { map: topology, backgroundColor: 'transparent', height },
           title: { text: null },
           credits: { enabled: false },
-          mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
+          mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom', theme: navTheme() } },
           colorAxis: {
             minColor: css('--surface2', '#18242f'),
             maxColor: css('--amber', '#dda765'),
@@ -72,6 +84,7 @@ export default function OrbitMap({
       applyGlovizTheme();
       try {
         chart.update({
+          mapNavigation: { buttonOptions: { theme: navTheme() } },
           colorAxis: {
             minColor: css('--surface2', '#18242f'),
             maxColor: css('--amber', '#dda765'),
