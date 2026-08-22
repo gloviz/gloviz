@@ -40,6 +40,8 @@ export interface OrbitChartProps {
   extraOptions?: any;
   /** Extra context handed to the Orbit AI tools for this chart. */
   note?: string;
+  /** Only read observations newer than this epoch ms (stories about today). */
+  fromMs?: number;
 }
 
 /**
@@ -49,7 +51,7 @@ export interface OrbitChartProps {
 export default function OrbitChart({
   chartId, title, subtitle, unit, attribution, height = 360, iconHtml, live,
   series, staticSeries, type = 'line', tools, initialTool,
-  menuVisibility = 'always', extraOptions, note,
+  menuVisibility = 'always', extraOptions, note, fromMs,
 }: OrbitChartProps) {
   const destroyed = useRef(false);
 
@@ -121,8 +123,9 @@ export default function OrbitChart({
       const H = await ensureHighcharts();
       let resolved: any[] = staticSeries ?? [];
       if (series?.length) {
+        const q = fromMs ? `&from=${Math.round(fromMs)}` : '';
         const data = await Promise.all(
-          series.map((s) => fetch(`/api/series?id=${s.id}`).then((r) => (r.ok ? r.json() : []))),
+          series.map((s) => fetch(`/api/series?id=${s.id}${q}`).then((r) => (r.ok ? r.json() : []))),
         );
         resolved = series.map((s, i) => ({ type, name: s.name, data: data[i] ?? [] }));
       }
@@ -159,7 +162,7 @@ export default function OrbitChart({
       try { chart?.destroy(); } catch { /* orbit wraps the chart; ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartId]);
+  }, [chartId, fromMs]);
 
   return (
     <div className="card chartwrap">

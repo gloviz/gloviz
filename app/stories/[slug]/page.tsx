@@ -56,12 +56,14 @@ export default async function LiveStory({ params }: { params: Promise<{ slug: st
           initialTool={c.tool}
           live
           note={c.note}
+          // Sub-daily series are read from the story's window; daily and annual
+          // aggregates would vanish inside 24 hours, so they read normally.
+          fromMs={
+            ['hourly', 'minute', '5 minutes', '30 minutes'].includes(c.meta.frequency)
+              ? from
+              : undefined
+          }
           extraOptions={{
-            // Annual and daily aggregates would vanish inside a 24-hour window,
-            // so only the sub-daily series are clamped.
-            ...(['hourly', 'minute', '5 minutes', '30 minutes'].includes(c.meta.frequency)
-              ? { xAxis: { min: from } }
-              : {}),
             ...(c.type === 'areaspline'
               ? { plotOptions: { areaspline: { stacking: 'normal', fillOpacity: 0.35, lineWidth: 1 } } }
               : {}),
