@@ -98,10 +98,10 @@ export default async function Home() {
             { href: '/compare', icon: 'economy', title: 'Up to five countries', lead: 'Every shared metric on one axis' },
             { href: '/race', icon: 'forecast', title: 'Ranking race', lead: 'Drag the year, watch the order change' },
             { href: '/surprise', icon: 'ai', title: 'Surprise me', lead: 'Two unrelated sources, correlated anyway' },
-            { href: '/stories/heat-and-power', icon: 'climate', title: 'Heat and power', lead: 'Temperature against solar irradiance' },
-            { href: '/stories/the-pandemic-dip', icon: 'health', title: 'The pandemic dip', lead: 'Life expectancy fell in 2020' },
-            { href: '/stories/quake-week', icon: 'environment', title: 'A week of earthquakes', lead: 'Forty M4+ events a day' },
-            { href: '/stories', icon: 'summary', title: 'Live stories', lead: 'Written from the freshest data' },
+            { href: '/stories/the-heat-right-now', icon: 'climate', title: 'The heat right now', lead: 'Thirty cities, last 24 hours' },
+            { href: '/stories/the-ground-is-moving', icon: 'environment', title: 'The ground is moving', lead: 'Every M4+ quake today' },
+            { href: '/stories/how-clean-is-the-power', icon: 'zap', title: 'How clean is the power', lead: 'Grid CO2, five minutes apart' },
+            { href: '/stories', icon: 'summary', title: 'All live stories', lead: 'Written from the last 24 hours' },
           ].map((t) => (
             <Link key={t.href} className="tile" href={t.href}>
               <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[t.icon] }} />

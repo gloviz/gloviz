@@ -187,7 +187,7 @@ export async function getScatter(
 /** Series references for one metric, for multi-series time charts. */
 export async function getSeriesRefs(
   metricPrefix: string, limit = 14,
-): Promise<{ refs: SeriesRef[]; unit: string; source: string; attribution: string; title: string }> {
+): Promise<{ refs: SeriesRef[]; unit: string; source: string; attribution: string; title: string; frequency: string }> {
   const db = readClient();
   const { data } = await db
     .from('series')
@@ -203,6 +203,7 @@ export async function getSeriesRefs(
     source: rows[0]?.sources?.name ?? '',
     attribution: rows[0]?.sources?.attribution ?? '',
     title: (rows[0]?.title ?? '').replace(/\s+[A-Z]{2,5}$/, '').trim(),
+    frequency: rows[0]?.frequency ?? '',
   };
 }
 
@@ -590,41 +591,49 @@ export interface LiveStory {
 }
 
 export async function getLiveStories(): Promise<LiveStory[]> {
-  const [temps, quakes, pm25, dkCo2, ukActual, flights] = await Promise.all([
-    getLatest('temperature_2m:'),
-    getLatest('quakes:maxmag'),
-    getLatest('openaq:pm25:'),
-    getLatest('eds:co2:'),
-    getLatest('ci:intensity:actual'),
-    getLatest('opensky:count:'),
+  // Everything here is measured over the last 24 hours, except air quality,
+  // where OpenAQ publishes daily means a day behind, so that one says 72.
+  const [temps, quakes, quakeCount, pm25, dkCo2, ukActual, flights] = await Promise.all([
+    getWindow('temperature_2m:', 24),
+    getWindow('quakes:maxmag', 24),
+    getWindow('quakes:count:m40', 24),
+    getWindow('openaq:pm25:', 72),
+    getWindow('eds:co2:', 24),
+    getWindow('ci:intensity:actual', 24),
+    getWindow('opensky:count:', 24),
   ]);
 
+  const n = (x: number, d = 1) => x.toFixed(d);
   const stories: LiveStory[] = [
     {
       slug: 'the-heat-right-now',
-      kicker: 'Live · Open-Meteo',
+      kicker: 'Last 24 hours · Open-Meteo',
       title: 'The heat', accent: 'right now.',
       icon: 'climate',
       domain: 'climate',
-      headline: temps[0] ? `${temps[0].name} is the warmest city on the board at ${temps[0].value.toFixed(1)} °C` : 'Thirty cities, hour by hour',
+      headline: temps[0]
+        ? `${temps[0].name} peaked at ${n(temps[0].max)} °C in the last 24 hours`
+        : 'Thirty cities, hour by hour',
       lead: temps[0] && temps.at(-1)
-        ? `Right now the spread between the warmest and the coldest city GLOVIZ watches is ${(temps[0].value - temps.at(-1)!.value).toFixed(1)} degrees: ${temps[0].name} at ${temps[0].value.toFixed(1)} °C against ${temps.at(-1)!.name} at ${temps.at(-1)!.value.toFixed(1)} °C. The forecast tool is open on the first chart, so you can see where each line is heading over the next three days.`
+        ? `Over the last 24 hours the warmest city GLOVIZ watches was ${temps[0].name}, peaking at ${n(temps[0].max)} °C and now reading ${n(temps[0].latest)}. The coldest was ${temps.at(-1)!.name}, which bottomed out at ${n(temps.at(-1)!.min)} °C. That is a spread of ${n(temps[0].max - temps.at(-1)!.min)} degrees across the same day.`
         : 'Thirty cities, refreshed every hour, with a three-day forecast attached.',
       charts: [
         { prefix: 'temperature_2m:', title: 'Temperature', subtitle: 'Open-Meteo · hourly · °C', type: 'spline', tool: 'forecast', limit: 14,
-          note: 'The last three days of each line are Open-Meteo\'s own forecast, not measurements.' },
+          note: "The last three days of each line are Open-Meteo's own forecast, not measurements." },
         { prefix: 'relative_humidity_2m:', title: 'Humidity, the same cities', subtitle: 'Open-Meteo · hourly · %', type: 'areaspline', tool: 'correlations', limit: 10 },
       ],
     },
     {
       slug: 'the-ground-is-moving',
-      kicker: 'Live · USGS',
+      kicker: 'Last 24 hours · USGS',
       title: 'The ground', accent: 'is moving.',
       icon: 'environment',
       domain: 'environment',
-      headline: quakes[0] ? `The strongest quake today measured ${quakes[0].value.toFixed(1)}` : 'Every M4+ event on Earth',
+      headline: quakes[0]
+        ? `The strongest quake in the last day measured ${n(quakes[0].max)}`
+        : 'Every M4+ event on Earth',
       lead: quakes[0]
-        ? `The strongest earthquake recorded in the current UTC day measured magnitude ${quakes[0].value.toFixed(1)}. Roughly forty events above magnitude four happen every day, and the count is remarkably stable; the energy is not, which is why the second chart needs a logarithmic axis.`
+        ? `The strongest earthquake in the last 24 hours measured magnitude ${n(quakes[0].max)}${quakeCount[0] ? `, one of ${Math.round(quakeCount[0].latest)} events above magnitude four in the same period` : ''}. The count of events is remarkably stable day to day; the energy is not, which is why the second chart needs a logarithmic axis.`
         : 'Every magnitude 4 and above, aggregated per UTC day.',
       charts: [
         { prefix: 'quakes:count:m40', title: 'Events per day', subtitle: 'USGS · daily · M4.0+', type: 'column', tool: 'control-limits', limit: 1 },
@@ -635,14 +644,16 @@ export async function getLiveStories(): Promise<LiveStory[]> {
     },
     {
       slug: 'what-you-are-breathing',
-      kicker: 'Live · OpenAQ',
+      kicker: 'Last 72 hours · OpenAQ',
       title: 'What you are', accent: 'breathing.',
       icon: 'environment',
       domain: 'environment',
-      headline: pm25[0] ? `${pm25[0].name} is at ${pm25[0].value.toFixed(0)} µg/m³ PM2.5` : 'Twelve cities, daily means',
+      headline: pm25[0]
+        ? `${pm25[0].name} reported ${pm25[0].latest.toFixed(0)} µg/m³ PM2.5`
+        : 'Twelve cities, daily means',
       lead: pm25[0]
-        ? `${pm25[0].name} currently reports ${pm25[0].value.toFixed(0)} µg/m³ of PM2.5 as a daily mean. The WHO 24-hour guideline is 15. Anomaly detection is open, so the days that break the pattern are marked without anyone deciding in advance what counts as bad.`
-        : 'PM2.5, PM10 and NO2 for twelve cities.',
+        ? `${pm25[0].name} is the dirtiest air on the board with ${pm25[0].latest.toFixed(0)} µg/m³ of PM2.5 as a daily mean, against a WHO 24-hour guideline of 15. OpenAQ publishes daily means a day behind, so this story reads a 72-hour window rather than 24.`
+        : 'PM2.5, PM10 and NO2 for twelve cities, published as daily means.',
       charts: [
         { prefix: 'openaq:pm25:', title: 'PM2.5', subtitle: 'OpenAQ · daily mean · µg/m³', type: 'spline', tool: 'anomaly', limit: 12 },
         { prefix: 'openaq:no2:', title: 'Nitrogen dioxide', subtitle: 'OpenAQ · daily mean · µg/m³', type: 'line', tool: 'trendline', limit: 12 },
@@ -650,30 +661,34 @@ export async function getLiveStories(): Promise<LiveStory[]> {
     },
     {
       slug: 'how-clean-is-the-power',
-      kicker: 'Live · Energinet and National Grid',
+      kicker: 'Last 24 hours · Energinet and National Grid',
       title: 'How clean is', accent: 'the power?',
       icon: 'zap',
       domain: 'energy',
-      headline: dkCo2[0] ? `Danish electricity is at ${dkCo2[0].value.toFixed(0)} g/kWh` : 'Carbon intensity, minute by minute',
-      lead: dkCo2[0] && ukActual[0]
-        ? `Danish electricity currently carries ${dkCo2[0].value.toFixed(0)} grams of CO2 per kilowatt hour, updated every five minutes; the British grid is at ${ukActual[0].value.toFixed(0)}. The two systems are measured by different operators with different methods, but the shape of the day is the same: intensity falls when the wind blows.`
+      headline: dkCo2[0]
+        ? `Danish electricity ranged from ${dkCo2[0].min.toFixed(0)} to ${dkCo2[0].max.toFixed(0)} g/kWh today`
+        : 'Carbon intensity, minute by minute',
+      lead: dkCo2[0]
+        ? `In the last 24 hours the carbon intensity of Danish electricity in ${dkCo2[0].name} swung between ${dkCo2[0].min.toFixed(0)} and ${dkCo2[0].max.toFixed(0)} grams per kilowatt hour, and currently sits at ${dkCo2[0].latest.toFixed(0)}${ukActual[0] ? `; the British grid is at ${ukActual[0].latest.toFixed(0)}` : ''}. A factor of ten inside one day is what a wind-heavy grid looks like from the inside.`
         : 'Carbon intensity of two European grids, five minutes and half an hour apart.',
       charts: [
         { prefix: 'eds:co2:', title: 'Danish grid CO2 intensity', subtitle: 'Energi Data Service · every 5 minutes · g/kWh', type: 'line', tool: 'control-limits', limit: 4 },
         { prefix: 'ci:intensity:', title: 'British grid, forecast against outcome', subtitle: 'National Grid · 30 minutes · gCO2/kWh', type: 'spline', tool: 'correlations', limit: 2,
-          note: 'The operator publishes its own forecast alongside the actual value, which is unusual and makes this the natural place to test a statistical forecast against a professional one.' },
+          note: 'The operator publishes its own forecast alongside the actual value, which makes this the natural place to test a statistical forecast against a professional one.' },
         { prefix: 'eds:live:', title: 'The Danish system right now', subtitle: 'Energi Data Service · every minute · MW', type: 'areaspline', tool: 'contribution', limit: 6 },
       ],
     },
     {
       slug: 'everything-in-the-air',
-      kicker: 'Live · OpenSky',
+      kicker: 'Last 24 hours · OpenSky',
       title: 'Everything', accent: 'in the air.',
       icon: 'forecast',
       domain: 'transport',
-      headline: flights.length ? `${flights.reduce((a, p) => a + p.value, 0).toLocaleString('en')} aircraft airborne in the last snapshot` : 'Aircraft counted every hour',
-      lead: flights.length
-        ? `In the most recent hourly snapshot, GLOVIZ counted ${flights.reduce((a, p) => a + p.value, 0).toLocaleString('en')} aircraft transmitting ADS-B across four regions, with ${flights[0].name} the busiest. Coverage depends on volunteer receivers, so the level is a lower bound. The shape over the day is the real signal.`
+      headline: flights[0]
+        ? `${Math.round(flights[0].max).toLocaleString('en')} aircraft over ${flights[0].name} at the busiest hour`
+        : 'Aircraft counted every hour',
+      lead: flights[0]
+        ? `Air traffic over ${flights[0].name} peaked at ${Math.round(flights[0].max).toLocaleString('en')} aircraft in the last 24 hours and fell to ${Math.round(flights[0].min).toLocaleString('en')} at its quietest; right now it is ${Math.round(flights[0].latest).toLocaleString('en')}. Coverage depends on volunteer ADS-B receivers, so treat the level as a lower bound and the daily shape as the signal.`
         : 'Aircraft transmitting ADS-B, counted hourly over four regions.',
       charts: [
         { prefix: 'opensky:count:', title: 'Aircraft airborne', subtitle: 'OpenSky · hourly snapshot', type: 'line', tool: 'anomaly', limit: 6 },
@@ -682,4 +697,68 @@ export async function getLiveStories(): Promise<LiveStory[]> {
     },
   ];
   return stories;
+}
+
+/* ------------------------------------------------------------------ *
+ * A 24-hour window, for stories that are explicitly about today.
+ * ------------------------------------------------------------------ */
+
+export interface WindowStat {
+  code: string;
+  name: string;
+  latest: number;
+  min: number;
+  max: number;
+  first: number;
+  points: number;
+}
+
+/**
+ * Every observation from the last `hours` for the series matching a prefix,
+ * summarised per series. PostgREST caps a response at 1000 rows, so the read is
+ * ordered newest first: a partial window is still a correct recent window.
+ */
+export async function getWindow(metricPrefix: string, hours = 24): Promise<WindowStat[]> {
+  const db = readClient();
+  const { data: series } = await db
+    .from('series')
+    .select('id, geo_code, title')
+    .like('external_id', `${metricPrefix}%`)
+    .limit(120);
+  const rows = (series ?? []) as any[];
+  if (!rows.length) return [];
+
+  const labels = shortLabels(rows.map((r) => r.title));
+  const meta = new Map(rows.map((r, i) => [r.id, { code: r.geo_code, name: labels[i] }]));
+  const cutoff = new Date(Date.now() - hours * 3_600_000).toISOString();
+
+  const { data: obs } = await db
+    .from('observations')
+    .select('series_id, ts, value')
+    .in('series_id', rows.map((r) => r.id))
+    .gte('ts', cutoff)
+    .order('ts', { ascending: false })
+    .limit(1000);
+
+  const bySeries = new Map<number, number[]>();
+  for (const o of (obs ?? []) as any[]) {
+    if (o.value === null) continue;
+    (bySeries.get(o.series_id) ?? bySeries.set(o.series_id, []).get(o.series_id)!).push(Number(o.value));
+  }
+
+  const out: WindowStat[] = [];
+  for (const [id, values] of bySeries) {
+    const m = meta.get(id);
+    if (!m || !values.length) continue;
+    out.push({
+      code: m.code,
+      name: m.name,
+      latest: values[0],                 // newest first
+      first: values[values.length - 1],  // oldest inside the window
+      min: Math.min(...values),
+      max: Math.max(...values),
+      points: values.length,
+    });
+  }
+  return out.sort((a, b) => b.latest - a.latest);
 }

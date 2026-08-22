@@ -3,46 +3,22 @@ import { ICONS } from '@/lib/icons';
 import { getLiveStories } from '@/lib/queries';
 
 export const revalidate = 300;
-
 export const metadata = { title: 'Stories · GLOVIZ' };
-
-const STORIES = [
-  {
-    slug: 'heat-and-power',
-    icon: 'climate',
-    kicker: 'Climate meets energy',
-    title: 'Heat and power',
-    lead: 'Temperature in eight cities against the solar irradiance falling on them, with correlations open from the first paint.',
-  },
-  {
-    slug: 'the-pandemic-dip',
-    icon: 'health',
-    kicker: 'Health',
-    title: 'The pandemic dip',
-    lead: 'Life expectancy fell in 2020 and 2021 in almost every country tracked here. The anomaly detector finds it without being told where to look.',
-  },
-  {
-    slug: 'quake-week',
-    icon: 'environment',
-    kicker: 'Environment',
-    title: 'A week of earthquakes',
-    lead: 'Every M4.0+ event on Earth, per day, with the energy that came with it on a log scale. Control limits show when the planet is out of its usual range.',
-  },
-];
 
 export default async function Stories() {
   const live = await getLiveStories();
   return (
     <main className="wrap" style={{ paddingTop: 42, paddingBottom: 40 }}>
-      <div className="kicker">Curated</div>
+      <div className="kicker" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span className="dot" /> Written from live data, updated every five minutes
+      </div>
       <h2 style={{ marginTop: 12 }}>Stories <em>in the data</em></h2>
-      <p className="muted" style={{ maxWidth: '58ch', marginTop: 12 }}>
-        Each story opens with a specific Orbit tool already running on a specific
-        question. Everything stays live: the charts read the same database the
-        rest of the site does.
+      <p className="muted" style={{ maxWidth: '60ch', marginTop: 12 }}>
+        Each headline and opening paragraph below is generated from the last 24
+        hours of measurements, not written in advance. Open one and the charts
+        are live too, with a specific Orbit tool already running.
       </p>
-      <div className="kicker" style={{ marginTop: 30 }}>Written from live data, updated every five minutes</div>
-      <div className="grid3" style={{ marginTop: 14 }}>
+      <div className="grid3" style={{ marginTop: 28 }}>
         {live.map((s) => (
           <Link key={s.slug} className="card dcard" href={`/stories/${s.slug}`}>
             <div className="dtop">
@@ -52,20 +28,6 @@ export default async function Stories() {
             </div>
             <p>{s.headline}</p>
             <div className="dtags"><span className="pill on">{s.domain}</span></div>
-          </Link>
-        ))}
-      </div>
-
-      <div className="kicker" style={{ marginTop: 34 }}>Editorial, written once</div>
-      <div className="grid3" style={{ marginTop: 14 }}>
-        {STORIES.map((s) => (
-          <Link key={s.slug} className="card dcard" href={`/stories/${s.slug}`}>
-            <div className="dtop">
-              <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[s.icon] }} />
-              <h3>{s.title}</h3>
-            </div>
-            <p>{s.lead}</p>
-            <div className="dtags"><span className="pill on">{s.kicker}</span></div>
           </Link>
         ))}
       </div>

@@ -22,6 +22,10 @@ export default async function LiveStory({ params }: { params: Promise<{ slug: st
   const story = (await getLiveStories()).find((s) => s.slug === slug);
   if (!story) notFound();
 
+  // Stories are about the window named in the kicker, so the charts open there.
+  const hours = story.kicker.includes('72') ? 72 : 24;
+  const from = Date.now() - hours * 3_600_000;
+
   const charts = await Promise.all(
     story.charts.map(async (c) => ({ ...c, refs: (await getSeriesRefs(c.prefix, c.limit)).refs,
       meta: await getSeriesRefs(c.prefix, 1) })),
@@ -52,20 +56,24 @@ export default async function LiveStory({ params }: { params: Promise<{ slug: st
           initialTool={c.tool}
           live
           note={c.note}
-          extraOptions={
-            c.type === 'areaspline'
+          extraOptions={{
+            // Annual and daily aggregates would vanish inside a 24-hour window,
+            // so only the sub-daily series are clamped.
+            ...(['hourly', 'minute', '5 minutes', '30 minutes'].includes(c.meta.frequency)
+              ? { xAxis: { min: from } }
+              : {}),
+            ...(c.type === 'areaspline'
               ? { plotOptions: { areaspline: { stacking: 'normal', fillOpacity: 0.35, lineWidth: 1 } } }
-              : c.prefix === 'quakes:energy'
-                ? { yAxis: { type: 'logarithmic' } }
-                : undefined
-          }
+              : {}),
+            ...(c.prefix === 'quakes:energy' ? { yAxis: { type: 'logarithmic' } } : {}),
+          }}
           height={400}
         />
       ))}
       <p className="muted" style={{ fontSize: 12 }}>
         This page is written from the data: the headline and the opening
-        paragraph are generated from the freshest values in the database every
-        five minutes. <Link href="/stories">All stories</Link>.
+        paragraph are generated from the last {hours} hours of measurements,
+        every five minutes. <Link href="/stories">All stories</Link>.
       </p>
     </DomainPage>
   );
