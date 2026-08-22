@@ -95,6 +95,17 @@ export function applyGlovizTheme(): void {
   if (!H?.setOptions) return;
   const css = (n: string, f: string) =>
     getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
+  // Orbit's wrapper subtree is not invalidated when data-theme changes: the
+  // toolbar keeps the previous theme's colours even though the custom
+  // properties on it are already correct. Verified in the browser: forcing a
+  // style recalculation on .hc-tools-wrapper repaints it. Do that first, then
+  // re-assert the palette Orbit's own template may have replaced.
+  for (const w of Array.from(document.querySelectorAll<HTMLElement>('.hc-tools-wrapper'))) {
+    const previous = w.style.display;
+    w.style.display = 'none';
+    void w.offsetHeight;
+    w.style.display = previous;
+  }
   H.setOptions({
     colors: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css(`--s${i}`, '#8fb3c9')),
     chart: {
