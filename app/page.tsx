@@ -101,7 +101,8 @@ export default async function Home() {
             { href: '/stories/the-heat-right-now', icon: 'climate', title: 'The heat right now', lead: 'Thirty cities, last 24 hours' },
             { href: '/stories/the-ground-is-moving', icon: 'environment', title: 'The ground is moving', lead: 'Every M4+ quake today' },
             { href: '/stories/how-clean-is-the-power', icon: 'zap', title: 'How clean is the power', lead: 'Grid CO2, five minutes apart' },
-            { href: '/stories', icon: 'summary', title: 'All live stories', lead: 'Written from the last 24 hours' },
+            { href: '/today', icon: 'summary', title: 'Today', lead: 'Records and extremes, written by the database' },
+            { href: '/forecasts', icon: 'forecast', title: 'Who called it?', lead: 'Every forecast, scored against the outcome' },
           ].map((t) => (
             <Link key={t.href} className="tile" href={t.href}>
               <span className="chip" dangerouslySetInnerHTML={{ __html: ICONS[t.icon] }} />

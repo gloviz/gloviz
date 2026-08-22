@@ -499,27 +499,13 @@ export async function getPair(idA: number, idB: number): Promise<PairedSeries | 
  * two unrelated institutions is the interesting kind.
  */
 export async function getSurprisingPair(seed?: number): Promise<PairedSeries | null> {
-  const options = await getMetricOptions(220);
-  if (options.length < 4) return null;
-
-  // Deterministic per hour unless a seed is given, so the page can be cached.
+  // Pairs are precomputed nightly (scripts/insights.ts), so a surprise is one
+  // read plus one pairing, not eight sampling attempts.
+  const candidates = await getTopCorrelations(40, true);
+  if (!candidates.length) return null;
   const s = seed ?? Math.floor(Date.now() / 3_600_000);
-  const rand = (n: number, salt: number) => {
-    const x = Math.sin(s * 9301 + salt * 49297) * 233280;
-    return Math.floor((x - Math.floor(x)) * n);
-  };
-
-  let best: PairedSeries | null = null;
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const a = options[rand(options.length, attempt * 2 + 1)];
-    const b = options[rand(options.length, attempt * 2 + 2)];
-    if (!a || !b || a.id === b.id || a.source === b.source) continue;
-    const pair = await getPair(a.id, b.id);
-    if (!pair || pair.overlap < 12) continue;
-    if (!best || Math.abs(pair.r) > Math.abs(best.r)) best = pair;
-    if (best && Math.abs(best.r) > 0.85) break;
-  }
-  return best;
+  const pick = candidates[Math.abs(Math.floor(Math.sin(s * 9301) * 233280)) % candidates.length];
+  return getPair(pick.a.id, pick.b.id);
 }
 
 /** A metric's value per geography per year, for the ranking slider. */
@@ -761,4 +747,92 @@ export async function getWindow(metricPrefix: string, hours = 24): Promise<Windo
     });
   }
   return out.sort((a, b) => b.latest - a.latest);
+}
+
+/* ------------------------------------------------------------------ *
+ * Insight layer reads: records, correlations, forecast scoreboard.
+ * ------------------------------------------------------------------ */
+
+export interface RecordItem {
+  seriesId: number; title: string; unit: string; source: string; domain: string;
+  kind: 'high' | 'low'; value: number; ts: string; windowDays: number;
+}
+
+export async function getRecords(limit = 12): Promise<RecordItem[]> {
+  const db = readClient();
+  const { data } = await db
+    .from('records')
+    .select('series_id, kind, window_days, value, ts, series(title, unit, domain, sources(name))')
+    .order('detected_at', { ascending: false })
+    .limit(limit);
+  return ((data ?? []) as any[]).map((r) => ({
+    seriesId: r.series_id,
+    title: r.series?.title ?? '',
+    unit: r.series?.unit ?? '',
+    source: r.series?.sources?.name ?? '',
+    domain: r.series?.domain ?? '',
+    kind: r.kind,
+    value: Number(r.value),
+    ts: r.ts,
+    windowDays: r.window_days,
+  }));
+}
+
+export interface CorrelationItem {
+  a: { id: number; title: string }; b: { id: number; title: string };
+  r: number; overlap: number; crossSource: boolean;
+}
+
+export async function getTopCorrelations(limit = 12, crossOnly = true): Promise<CorrelationItem[]> {
+  const db = readClient();
+  let query = db
+    .from('correlations')
+    .select('series_a, series_b, r, overlap, cross_source, a:series!correlations_series_a_fkey(id, title), b:series!correlations_series_b_fkey(id, title)')
+    .limit(1200);
+  if (crossOnly) query = query.eq('cross_source', true);
+  const { data } = await query;
+  return ((data ?? []) as any[])
+    .sort((x, y) => Math.abs(y.r) - Math.abs(x.r))
+    .slice(0, limit)
+    .map((c) => ({
+      a: { id: c.a?.id, title: c.a?.title ?? '' },
+      b: { id: c.b?.id, title: c.b?.title ?? '' },
+      r: Number(c.r), overlap: c.overlap, crossSource: c.cross_source,
+    }));
+}
+
+export interface ScoreRow {
+  predictor: string;
+  seriesTitle: string;
+  seriesId: number;
+  unit: string;
+  n: number;
+  mae: number;
+}
+
+/** MAE per predictor per series, scored forecasts only. */
+export async function getScoreboard(): Promise<ScoreRow[]> {
+  const db = readClient();
+  const { data } = await db
+    .from('forecasts')
+    .select('predictor, series_id, abs_error, series(title, unit)')
+    .not('abs_error', 'is', null)
+    .limit(10000);
+  const agg = new Map<string, { predictor: string; seriesId: number; title: string; unit: string; sum: number; n: number }>();
+  for (const f of ((data ?? []) as any[])) {
+    const key = `${f.predictor}:${f.series_id}`;
+    const cur = agg.get(key) ?? {
+      predictor: f.predictor, seriesId: f.series_id,
+      title: f.series?.title ?? '', unit: f.series?.unit ?? '', sum: 0, n: 0,
+    };
+    cur.sum += Number(f.abs_error); cur.n += 1;
+    agg.set(key, cur);
+  }
+  return [...agg.values()]
+    .filter((x) => x.n >= 3)
+    .map((x) => ({
+      predictor: x.predictor, seriesTitle: x.title, seriesId: x.seriesId,
+      unit: x.unit, n: x.n, mae: Math.round((x.sum / x.n) * 1000) / 1000,
+    }))
+    .sort((a, b) => a.seriesTitle.localeCompare(b.seriesTitle) || a.mae - b.mae);
 }

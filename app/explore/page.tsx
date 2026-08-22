@@ -4,7 +4,7 @@ import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
 import TimeWindow from '@/components/TimeWindow';
 import { ICONS } from '@/lib/icons';
-import { getMetricOptions, getPair } from '@/lib/queries';
+import { getMetricOptions, getPair, getTopCorrelations } from '@/lib/queries';
 
 export const revalidate = 300;
 export const metadata = { title: 'Metric explorer · GLOVIZ' };
@@ -21,7 +21,10 @@ export default async function Explore({
   searchParams,
 }: { searchParams: Promise<{ x?: string; y?: string }> }) {
   const sp = await searchParams;
-  const options = await getMetricOptions(400);
+  const [options, suggestions] = await Promise.all([
+    getMetricOptions(400),
+    getTopCorrelations(8, true),
+  ]);
   const fallbackX = options.find((o) => o.label.startsWith('Temperature'))?.id ?? options[0]?.id;
   const fallbackY = options.find((o) => o.label.includes('CO2 intensity'))?.id
     ?? options.find((o) => o.id !== fallbackX)?.id;
@@ -47,6 +50,19 @@ export default async function Explore({
       </p>
 
       <MetricPicker options={options} x={x} y={y} />
+
+      {suggestions.length > 0 && (
+        <div className="chiprow chipopts" style={{ marginTop: 4 }}>
+          <span className="muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Try:
+          </span>
+          {suggestions.map((s) => (
+            <Link key={`${s.a.id}-${s.b.id}`} className="chipopt" href={`/explore?x=${s.a.id}&y=${s.b.id}`}>
+              {s.a.title.slice(0, 26)} × {s.b.title.slice(0, 26)} (r={s.r})
+            </Link>
+          ))}
+        </div>
+      )}
 
       {pair && s && (
         <>

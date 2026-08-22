@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import SeriesSearch from '@/components/SeriesSearch';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { getMetricOptions } from '@/lib/queries';
 import { MARK_SVG } from '@/lib/artwork';
 
 export const metadata: Metadata = {
@@ -22,7 +24,9 @@ function Brand({ small }: { small?: boolean }) {
   );
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  let searchOptions: Awaited<ReturnType<typeof getMetricOptions>> = [];
+  try { searchOptions = await getMetricOptions(400); } catch { /* db unreachable at build */ }
   return (
     <html lang="en" data-theme="dyphav">
       <head>
@@ -37,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="wrap topin">
             <Brand />
             <div className="actions">
+              <SeriesSearch options={searchOptions} />
               <ThemeSwitcher />
             </div>
           </div>
@@ -46,6 +51,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Brand small />
           <span>Built with Highcharts Orbit</span>
           <span className="r">
+            <Link href="/today">Today</Link>
+            <Link href="/forecasts">Forecasts</Link>
             <Link href="/stories">Stories</Link>
             <Link href="/explore">Explorer</Link>
             <Link href="/status">API status</Link>
