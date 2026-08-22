@@ -72,6 +72,13 @@ async function main() {
   const end = new Date(Date.now() - 6 * 86_400_000).toISOString().slice(0, 10);
   for (let ci = from; ci <= to; ci++) {
     const city = CITIES[ci];
+    // Resume support: skip cities that are already fully loaded.
+    const extId = `era5:temperature_2m_mean:${city.name.toLowerCase().replace(/ /g, '-')}`;
+    const { data: existing } = await db.from('series').select('id').eq('source_id', 'era5').eq('external_id', extId).maybeSingle();
+    if (existing) {
+      const { count } = await db.from('observations').select('ts', { count: 'exact', head: true }).eq('series_id', existing.id);
+      if ((count ?? 0) > 30000) { console.log(`${city.name}: already loaded (${count}), skipping`); continue; }
+    }
     const byVar = new Map<string, { ts: string; value: number | null }[]>(VARS.map((v) => [v.key, []]));
     for (let y = 1940; y <= Number(end.slice(0, 4)); y += 10) {
       const f = `${y}-01-01`;

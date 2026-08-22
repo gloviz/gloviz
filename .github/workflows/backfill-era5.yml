@@ -1,0 +1,27 @@
+name: Backfill ERA5
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'First city index (0-29)'
+        default: '0'
+      to:
+        description: 'Last city index (0-29)'
+        default: '29'
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      # The script is resumable: cities with a complete series are skipped,
+      # so re-running after a rate limit or timeout is always safe.
+      - run: npx tsx scripts/backfill-era5.ts ${{ github.event.inputs.from }} ${{ github.event.inputs.to }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
