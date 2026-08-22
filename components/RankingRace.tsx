@@ -39,7 +39,7 @@ export default function RankingRace({
                   'narrate', 'ai', 'export', 'annotate', 'fullscreen', 'share'],
         },
         chart: { type: 'bar', height: 520, backgroundColor: 'transparent', animation: { duration: 600 } },
-        title: { text: undefined },
+        title: { text: null },
         credits: { enabled: false },
         legend: { enabled: false },
         xAxis: {

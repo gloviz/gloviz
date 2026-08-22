@@ -143,10 +143,12 @@ export default function OrbitChart({
         chart: { type },
         series: resolved,
       }, extraOptions ?? {});
-      // Highcharts.merge drops undefined, so a title cleared inside the merge
-      // survives as the default "Chart title". Clear it after merging instead.
-      // The card header already carries the title (api.highcharts.com/highcharts/title.text).
-      if (!extraOptions?.title) merged.title = { text: undefined };
+      // title.text defaults to "Chart title"
+      // (api.highcharts.com/highcharts/title.text). The docs say to disable it
+      // with undefined, but Highcharts.merge drops undefined keys, so the
+      // default survived. null clears it, verified on the rendered page.
+      // The card header carries the real title anyway.
+      if (!extraOptions?.title) merged.title = { text: null };
       chart = H.chart(chartId, merged);
     })();
 
