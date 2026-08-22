@@ -384,3 +384,28 @@ html:root[data-theme] .orbit-ui input,
 html:root[data-theme] .orbit-ui select,
 html:root[data-theme] .orbit-ui textarea{
   background:var(--surface2);color:var(--text);border-color:var(--line-strong)}
+
+/* Floating Orbit surfaces must be opaque: they overlay the page, and Orbit
+   leaves several of them transparent when its own template is not applied. */
+html:root[data-theme] .orbit-toolbar__dropdown,
+html:root[data-theme] .orbit-menu,
+html:root[data-theme] .orbit-popover,
+html:root[data-theme] .orbit-modal,
+html:root[data-theme] .orbit-dialog,
+html:root[data-theme] .orbit-tooltip,
+html:root[data-theme] .orbit-select__list,
+html:root[data-theme] .orbit-combobox__list,
+html:root[data-theme] .orbit-command-palette,
+html:root[data-theme] [class*="orbit-"][class*="dropdown"],
+html:root[data-theme] [class*="orbit-"][class*="popover"],
+html:root[data-theme] [class*="orbit-"][class*="menu"]:not(.orbit-toolbar__menu),
+html:root[data-theme] [class*="orbit-"][role="menu"],
+html:root[data-theme] [class*="orbit-"][role="listbox"],
+html:root[data-theme] [class*="orbit-"][role="dialog"]{
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--line-strong);
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+  backdrop-filter:none;
+}
+html:root[data-theme] .orbit-toolbar__menu{background:transparent;border:0;box-shadow:none}

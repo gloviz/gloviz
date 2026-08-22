@@ -77,7 +77,6 @@ export default function OrbitChart({
           },
         },
       },
-      title: { text: undefined },
       xAxis: {
         lineColor: css('--line', '#2a3a49'), tickColor: css('--line', '#2a3a49'),
         labels: { style: { color: css('--muted', '#93a3b3'), fontSize: '10px' } },
@@ -131,7 +130,7 @@ export default function OrbitChart({
       }
       if (destroyed.current || !H) return;
       const base = theme();
-      chart = H.chart(chartId, H.merge(base, {
+      const merged = H.merge(base, {
         orbit: {
           enabled: true,
           id: chartId,
@@ -143,7 +142,12 @@ export default function OrbitChart({
         },
         chart: { type },
         series: resolved,
-      }, extraOptions ?? {}));
+      }, extraOptions ?? {});
+      // Highcharts.merge drops undefined, so a title cleared inside the merge
+      // survives as the default "Chart title". Clear it after merging instead.
+      // The card header already carries the title (api.highcharts.com/highcharts/title.text).
+      if (!extraOptions?.title) merged.title = { text: undefined };
+      chart = H.chart(chartId, merged);
     })();
 
     const recolor = () => {
