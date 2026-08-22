@@ -1021,22 +1021,43 @@ export interface CityToday {
 export async function getTodayVsNormal(): Promise<CityToday[]> {
   const db = readClient();
   const doy = dayOfYear(new Date());
+  const todayIso = new Date().toISOString().slice(0, 10) + 'T00:00:00Z';
   const [{ data: era5 }, { data: clim }, { data: live }] = await Promise.all([
     db.from('series')
       .select('id, geo_code, metadata')
       .like('external_id', 'era5:temperature_2m_mean:%'),
     db.from('climatology').select('*').eq('doy', doy),
     db.from('series')
-      .select('id, title, series_latest(ts, value)')
+      .select('id, title')
       .like('external_id', 'temperature_2m:%'),
   ]);
   const climBy = new Map(((clim ?? []) as any[]).map((c) => [c.series_id, c]));
+  // The climatology is built from DAILY MEANS, so the live value must be a
+  // daily mean too: an afternoon spot reading against mean percentiles reads
+  // several percentiles too warm. Average today's hourly observations instead.
+  const liveIds = ((live ?? []) as any[]).map((s) => s.id);
+  const { data: todayObs } = liveIds.length
+    ? await db.from('observations')
+        .select('series_id, ts, value')
+        .in('series_id', liveIds)
+        .gte('ts', todayIso)
+        .lte('ts', new Date().toISOString())
+        .limit(2000)
+    : { data: [] as any[] };
+  const sums = new Map<number, { sum: number; n: number; last: string }>();
+  for (const o of (todayObs ?? []) as any[]) {
+    if (o.value === null) continue;
+    const cur = sums.get(o.series_id) ?? { sum: 0, n: 0, last: o.ts };
+    cur.sum += Number(o.value); cur.n += 1;
+    if (o.ts > cur.last) cur.last = o.ts;
+    sums.set(o.series_id, cur);
+  }
   const liveByCity = new Map<string, { ts: string; value: number }>();
   for (const s of (live ?? []) as any[]) {
-    const l = Array.isArray(s.series_latest) ? s.series_latest[0] : s.series_latest;
+    const agg = sums.get(s.id);
     // Live titles are "Temperature <City>".
     const city = String(s.title).replace(/^Temperature /, '');
-    if (l && l.value !== null) liveByCity.set(city, { ts: l.ts, value: Number(l.value) });
+    if (agg && agg.n > 0) liveByCity.set(city, { ts: agg.last, value: agg.sum / agg.n });
   }
   return ((era5 ?? []) as any[]).map((s) => {
     const city = (s.metadata as any)?.city ?? '';

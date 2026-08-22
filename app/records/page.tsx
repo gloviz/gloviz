@@ -104,7 +104,7 @@ export default async function Records() {
         <div className="card" style={{ marginTop: 14, overflowX: 'auto' }}>
           <div style={{ minWidth: 660 }}>
             <div style={{ ...ROW, borderTop: 'none', paddingTop: 0 }} className="kicker">
-              <span>City</span><span>Now</span><span>Percentile for this date, 1940+</span><span>Normal span (p10 to p90)</span>
+              <span>City</span><span>Today, mean so far</span><span>Percentile for this date, 1940+</span><span>Normal span (p10 to p90)</span>
             </div>
             {today.filter((t) => t.percentile !== null).map((t) => (
               <div key={t.seriesId} style={ROW}>
@@ -113,8 +113,8 @@ export default async function Records() {
                 <span>
                   <PercentileBar p={t.percentile!} />
                   <small className="muted">
-                    {t.percentile! >= 90 ? `warmer than ${t.percentile} % of all ${doyLabel(t.clim!.doy)}s since 1940`
-                      : t.percentile! <= 10 ? `colder than ${100 - t.percentile!} % of all ${doyLabel(t.clim!.doy)}s since 1940`
+                    {t.percentile! >= 90 ? `warmer than ${t.percentile} % of every ${doyLabel(t.clim!.doy)} since 1940`
+                      : t.percentile! <= 10 ? `colder than ${100 - t.percentile!} % of every ${doyLabel(t.clim!.doy)} since 1940`
                       : `percentile ${t.percentile}`}
                   </small>
                 </span>
