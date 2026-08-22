@@ -8,6 +8,17 @@ import { ensureHighcharts, orbitReady } from '@/lib/loadHighcharts';
  * dashboard-wide AI. Augment mode starts automatically; the button swaps to
  * rebuild mode, which lays the same content out as a draggable dashboard grid.
  */
+/** Orbit's page bar says "Search tools"; the site prefers "More tools". */
+function renameSearchTools(): void {
+  let tries = 0;
+  const t = setInterval(() => {
+    tries += 1;
+    const span = document.querySelector('.orbit-search-tools span');
+    if (span && span.textContent !== 'More tools') span.textContent = 'More tools';
+    if (span || tries > 20) clearInterval(t);
+  }, 500);
+}
+
 export default function OrbitPageMode({
   pageKey,
   expectedCharts = 1,
@@ -49,6 +60,7 @@ export default function OrbitPageMode({
         try {
           page.current = H.orbitPage(config('augment'));
           setMode('augment');
+          renameSearchTools();
         } catch (err) {
           console.warn('orbitPage failed', err);
         }
@@ -69,6 +81,7 @@ export default function OrbitPageMode({
       page.current?.destroy();
       page.current = H.orbitPage(config(next));
       setMode(next);
+      renameSearchTools();
     } catch (err) {
       console.warn('mode swap failed', err);
     }
