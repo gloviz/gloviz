@@ -234,14 +234,6 @@ a:focus-visible,button:focus-visible,select:focus-visible,[tabindex]:focus-visib
 .chipopt:disabled{opacity:.4;cursor:not-allowed}
 .chipcount{color:var(--faint);font-weight:500}
 
-/* Time window picker */
-.timewin{display:inline-flex;gap:3px;background:var(--surface2);border:1px solid var(--line);
-  border-radius:999px;padding:3px}
-.timewin button{cursor:pointer;border:0;background:transparent;color:var(--muted);
-  border-radius:999px;padding:8px 14px;font:700 10px/1 "DM Sans";letter-spacing:.08em;
-  text-transform:uppercase;transition:.18s}
-.timewin button[aria-pressed=true]{background:var(--raised);color:var(--text)}
-.timewin button:hover{color:var(--text)}
 .pagetools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 4px}
 
 /* Metric explorer */

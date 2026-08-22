@@ -2,7 +2,6 @@ import Link from 'next/link';
 import MetricPicker from '@/components/MetricPicker';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
-import TimeWindow from '@/components/TimeWindow';
 import { ICONS } from '@/lib/icons';
 import { getMetricOptions, getPair, getTopCorrelations } from '@/lib/queries';
 
@@ -73,7 +72,6 @@ export default async function Explore({
             <span className="muted" style={{ fontSize: 12 }}>
               {pair.overlap.toLocaleString('en')} matched observations
             </span>
-            <TimeWindow storageKey="explore" />
           </div>
 
           <div style={{ display: 'grid', gap: 18, marginTop: 18 }}>

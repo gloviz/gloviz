@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
-import TimeWindow from '@/components/TimeWindow';
 import { ICONS } from '@/lib/icons';
 import { getComparableGeos, getCountryProfile } from '@/lib/queries';
 
@@ -40,7 +39,6 @@ export default async function Country({ params }: { params: Promise<{ code: stri
       <h2 style={{ marginTop: 12 }}>{code} <em>in {metrics.length} series</em></h2>
 
       <div className="pagetools">
-        <TimeWindow storageKey={`country-${code}`} />
         {neighbours.slice(0, 4).map((g) => (
           <Link key={g.code} className="chipopt" href={`/compare?c=${code},${g.code}`}>
             vs {g.code}

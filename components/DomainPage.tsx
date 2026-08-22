@@ -1,5 +1,4 @@
 import OrbitPageMode from './OrbitPageMode';
-import TimeWindow from './TimeWindow';
 import { ICONS } from '@/lib/icons';
 
 export default function DomainPage({
@@ -30,13 +29,6 @@ export default function DomainPage({
         </div>
         <span className="chip" style={{ width: 54, height: 54, borderRadius: 16 }}
               dangerouslySetInnerHTML={{ __html: ICONS[icon] }} />
-      </div>
-
-      <div className="pagetools">
-        <TimeWindow storageKey={pageKey} />
-        <span className="muted" style={{ fontSize: 11 }}>
-          Sets the visible range on every chart, and stays in the link.
-        </span>
       </div>
 
       {kpis && kpis.length > 0 && (

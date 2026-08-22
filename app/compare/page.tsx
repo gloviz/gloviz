@@ -1,5 +1,4 @@
 import CountryChips from '@/components/CountryChips';
-import TimeWindow from '@/components/TimeWindow';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
 import { ICONS } from '@/lib/icons';
@@ -51,10 +50,6 @@ export default async function Compare({
       </p>
 
       <CountryChips geos={geos} selected={codes} />
-
-      <div className="pagetools">
-        <TimeWindow storageKey={`compare-${codes.join('-')}`} />
-      </div>
 
       {metrics.length === 0 && (
         <p className="muted" style={{ marginTop: 24 }}>
