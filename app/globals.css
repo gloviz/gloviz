@@ -360,3 +360,27 @@ html:root[data-theme="midnatt"] .hcg-container{
   --ig-default-background:var(--surface);
   --ig-highlight-color-5:var(--surface2);
 }
+
+/* Orbit chrome. Orbit's own stylesheet colours its toolbar from
+   --highcharts-neutral-color-*, but one trigger rule kept resolving to the
+   other theme's muted tone after a theme switch, so these scoped rules
+   (specificity 0,2,1 plus a class) pin the chrome to the site tokens. */
+html:root[data-theme] .orbit-toolbar__trigger,
+html:root[data-theme] .orbit-toolbar2__item{color:var(--muted)}
+html:root[data-theme] .orbit-toolbar__trigger:hover,
+html:root[data-theme] .orbit-toolbar__trigger--open{color:var(--text)}
+html:root[data-theme] .orbit-toolbar__trigger--active,
+html:root[data-theme] .orbit-toolbar__back{color:var(--amber)}
+html:root[data-theme] .orbit-toolbar__dropdown,
+html:root[data-theme] .orbit-panel,
+html:root[data-theme] .orbit-ui [role="menu"],
+html:root[data-theme] .orbit-ui [role="listbox"]{
+  background:var(--surface);color:var(--text);border-color:var(--line-strong)}
+html:root[data-theme] .orbit-toolbar__dropdown-item{color:var(--text)}
+html:root[data-theme] .orbit-toolbar__dropdown-item:hover{background:var(--surface2)}
+html:root[data-theme] .orbit-toolbar__dropdown-item--active{
+  background:var(--amber);color:var(--on-amber)}
+html:root[data-theme] .orbit-ui input,
+html:root[data-theme] .orbit-ui select,
+html:root[data-theme] .orbit-ui textarea{
+  background:var(--surface2);color:var(--text);border-color:var(--line-strong)}
