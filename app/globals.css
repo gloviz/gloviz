@@ -392,3 +392,8 @@ html:root[data-theme] .orbit-cmdk__panel{
 .searchhits button.on,.searchhits button:hover{background:var(--surface2)}
 .searchhits strong{font-size:13px;font-weight:600}
 .searchhits small{color:var(--faint);font-size:11px}
+
+/* Orbit's page-mode chip strip shows "Filters: No filters applied" even when
+   idle. Hide the whole strip while its only content is the empty state; the
+   moment a filter chip exists, the empty span is gone and the strip returns. */
+.orbit-chipstrip:has(.orbit-chipstrip__empty){display:none}
