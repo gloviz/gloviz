@@ -12,8 +12,9 @@ export default async function Finance() {
     getLatest('EXR:D.'),
   ]);
   const attribution = 'Source: European Central Bank';
-  const majors = fx.refs.filter((r) => ['USD', 'GBP', 'CHF', 'JPY', 'NOK', 'SEK'].includes(r.name));
-  const emerging = fx.refs.filter((r) => ['TRY', 'BRL', 'ZAR', 'MXN', 'INR', 'PLN'].includes(r.name));
+  const cur = (name: string) => name.split(' ')[0];
+  const majors = fx.refs.filter((r) => ['USD', 'GBP', 'CHF', 'JPY', 'NOK', 'SEK'].includes(cur(r.name)));
+  const emerging = fx.refs.filter((r) => ['TRY', 'BRL', 'ZAR', 'MXN', 'INR', 'PLN'].includes(cur(r.name)));
 
   return (
     <DomainPage
@@ -62,12 +63,13 @@ export default async function Finance() {
       <OrbitChart
         chartId="fin-derived"
         title="Build your own series"
-        subtitle="ECB · daily · Derived Series is open: try a ratio or a moving average"
-        unit="per EUR"
+        subtitle="ECB · daily · indexed, first day = 100, so 20 currencies share one axis"
+        unit="index, start = 100"
         iconHtml={ICONS.correlations}
         attribution={attribution}
         series={fx.refs.slice(0, 8)}
         type="spline"
+        rebase
         initialTool="derived"
         note="Use Derived Series to compute cross rates: the ratio of two lines here is a currency pair the ECB never published."
         live

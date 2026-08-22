@@ -42,6 +42,9 @@ export interface OrbitChartProps {
   note?: string;
   /** Only read observations newer than this epoch ms (stories about today). */
   fromMs?: number;
+  /** Index every fetched series to 100 at its first value, so series with
+   *  wildly different magnitudes (yen and dollars) share one axis. */
+  rebase?: boolean;
 }
 
 /**
@@ -51,7 +54,7 @@ export interface OrbitChartProps {
 export default function OrbitChart({
   chartId, title, subtitle, unit, attribution, height = 360, iconHtml, live,
   series, staticSeries, type = 'line', tools, initialTool,
-  menuVisibility = 'always', extraOptions, note, fromMs,
+  menuVisibility = 'always', extraOptions, note, fromMs, rebase,
 }: OrbitChartProps) {
   const destroyed = useRef(false);
   // The chart is created once per effect run, so the effect has to depend on
@@ -131,7 +134,18 @@ export default function OrbitChart({
         const data = await Promise.all(
           series.map((s) => fetch(`/api/series?id=${s.id}${q}`).then((r) => (r.ok ? r.json() : []))),
         );
-        resolved = series.map((s, i) => ({ type, name: s.name, data: data[i] ?? [] }));
+        resolved = series.map((s, i) => {
+          let points: [number, number | null][] = data[i] ?? [];
+          if (rebase) {
+            const base = points.find((p) => p[1] !== null && p[1] !== 0)?.[1];
+            if (base) {
+              points = points.map((p) => [
+                p[0], p[1] === null ? null : Math.round((p[1] / base) * 10000) / 100,
+              ]);
+            }
+          }
+          return { type, name: s.name, data: points };
+        });
       }
       if (destroyed.current || !H) return;
       const base = theme();
@@ -181,7 +195,7 @@ export default function OrbitChart({
       try { chart?.destroy(); } catch { /* orbit wraps the chart; ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartId, fromMs, seriesKey, staticKey, type]);
+  }, [chartId, fromMs, seriesKey, staticKey, type, rebase]);
 
   return (
     <div className="card chartwrap">
