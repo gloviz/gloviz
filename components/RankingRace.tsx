@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ensureHighcharts } from '@/lib/loadHighcharts';
+import { applyGlovizTheme, ensureHighcharts } from '@/lib/loadHighcharts';
 
 /**
  * Drag the year and the ranking reorders. A bar chart race, but driven by the
@@ -83,6 +83,26 @@ export default function RankingRace({
   };
 
   useEffect(() => { draw(year); /* eslint-disable-next-line */ }, [year]);
+
+  // Follow the site theme: repaint bars and axes when it flips.
+  useEffect(() => {
+    const recolor = () => {
+      applyGlovizTheme();
+      try {
+        chart.current?.update({
+          colors: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css(`--s${i}`, '#8fb3c9')),
+          xAxis: { lineColor: css('--line', '#2a3a49'), labels: { style: { color: css('--muted', '#93a3b3') } } },
+          yAxis: { gridLineColor: css('--line', '#2a3a49'), labels: { style: { color: css('--muted', '#93a3b3') } },
+                   title: { style: { color: css('--muted', '#93a3b3') } } },
+          plotOptions: { bar: { dataLabels: { style: { color: css('--text', '#e6ecf0') } } } },
+          tooltip: { backgroundColor: css('--raised', '#20303e'), style: { color: css('--text', '#e6ecf0') } },
+        }, true, false, false);
+      } catch { /* mid-rebuild */ }
+    };
+    window.addEventListener('gloviz:theme', recolor);
+    return () => window.removeEventListener('gloviz:theme', recolor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!playing) return;

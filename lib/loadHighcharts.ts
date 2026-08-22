@@ -74,10 +74,36 @@ export function ensureHighcharts(): Promise<any> {
           console.warn(err);
         }
       }
+      applyGlovizTheme();
+      if (typeof window !== 'undefined') {
+        window.addEventListener('gloviz:theme', applyGlovizTheme);
+      }
       return (window as any).Highcharts;
     })();
   }
   return promise;
+}
+
+/**
+ * Orbit applies the organisation's Branding and Defaults through
+ * `Highcharts.setOptions`, which can replace the colour palette and switch on
+ * styled mode. GLOVIZ owns its palette, so re-assert it after Orbit has loaded
+ * and on every theme change.
+ */
+export function applyGlovizTheme(): void {
+  const H = (window as any).Highcharts;
+  if (!H?.setOptions) return;
+  const css = (n: string, f: string) =>
+    getComputedStyle(document.documentElement).getPropertyValue(n).trim() || f;
+  H.setOptions({
+    colors: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css(`--s${i}`, '#8fb3c9')),
+    chart: {
+      styledMode: false,
+      backgroundColor: 'transparent',
+      style: { fontFamily: '"DM Sans", system-ui, sans-serif' },
+    },
+    credits: { enabled: false },
+  });
 }
 
 /** True once Orbit attached itself to Highcharts. */

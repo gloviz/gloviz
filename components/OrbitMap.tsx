@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ensureHighcharts } from '@/lib/loadHighcharts';
+import { applyGlovizTheme, ensureHighcharts } from '@/lib/loadHighcharts';
 
 /**
  * World choropleth. Orbit treats a map as its own content kind: the axis-based
@@ -69,6 +69,7 @@ export default function OrbitMap({
     })();
     const recolor = () => {
       if (!chart) return;
+      applyGlovizTheme();
       try {
         chart.update({
           colorAxis: {

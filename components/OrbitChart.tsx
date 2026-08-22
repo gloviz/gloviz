@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { ensureHighcharts } from '@/lib/loadHighcharts';
+import { applyGlovizTheme, ensureHighcharts } from '@/lib/loadHighcharts';
 
 declare global {
   interface Window { Highcharts: any }
@@ -150,10 +150,18 @@ export default function OrbitChart({
       // Orbit can rebuild the chart under us; ask Highcharts for the live
       // instance by container id rather than trusting the closure.
       const H = (window as any).Highcharts;
+      applyGlovizTheme();
       const live = (H?.charts ?? []).find(
         (c: any) => c && c.renderTo && c.renderTo.id === chartId,
       ) ?? chart;
-      try { live?.update(theme(), true, false, false); } catch { /* mid-rebuild */ }
+      try {
+        const palette = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css(`--s${i}`, '#8fb3c9'));
+        live?.update(theme(), false, false, false);
+        live?.series?.forEach((s: any, i: number) => {
+          if (!s.options?.colorByPoint) s.update({ color: palette[i % palette.length] }, false);
+        });
+        live?.redraw();
+      } catch { /* mid-rebuild */ }
     };
     window.addEventListener('gloviz:theme', recolor);
     return () => {

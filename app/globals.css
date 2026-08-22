@@ -199,14 +199,22 @@ a:focus-visible,button:focus-visible,select:focus-visible,[tabindex]:focus-visib
 
 /* ------------------------------------------------------------------ *
  * Orbit and Highcharts theming.
- * Orbit's toolbar, panels and dialogs read --highcharts-* and --orbit-*
- * custom properties, so setting them per theme carries Vinterhav and
- * Dyphav into Orbit's own chrome, not just the plot area.
+ *
+ * Orbit injects its own <style> from the portal's Branding and Defaults, using
+ * `:root` plus a `@media (prefers-color-scheme: dark)` block, and it lands in
+ * the head AFTER this stylesheet. A bare `[data-theme=...]` selector has the
+ * same specificity as `:root`, so Orbit won and chart colours followed the
+ * operating system instead of the theme toggle.
+ *
+ * `html[data-theme=...]` outranks both `:root` and `.highcharts-dark`, so the
+ * site theme is the single source of truth again.
  * ------------------------------------------------------------------ */
-:root,
-[data-theme="dyphav"],
-[data-theme="kullhav"],
-[data-theme="midnatt"]{
+html,
+html[data-theme="dyphav"],
+html[data-theme="kullhav"],
+html[data-theme="midnatt"],
+html[data-theme="vinterhav"],
+html.highcharts-dark{
   --highcharts-background-color:transparent;
   --highcharts-neutral-color-100:var(--text);
   --highcharts-neutral-color-80:var(--text);
@@ -227,6 +235,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,[tabindex]:focus-visib
   --highcharts-color-2:var(--s3);--highcharts-color-3:var(--s4);
   --highcharts-color-4:var(--s5);--highcharts-color-5:var(--s6);
   --highcharts-color-6:var(--s7);--highcharts-color-7:var(--s8);
+  --highcharts-color-8:var(--s1);--highcharts-color-9:var(--s3);
   --orbit-surface:var(--surface);
   --orbit-surface-muted:var(--surface2);
   --orbit-text:var(--text);
