@@ -2,8 +2,9 @@ import Link from 'next/link';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
 import { ICONS } from '@/lib/icons';
+import InsightCard from '@/components/InsightCard';
 import {
-  getLiveHighlights, getRecords, getSeriesRefs, getTopCorrelations,
+  getInsights, getLiveHighlights, getRecords, getSeriesRefs, getTopCorrelations,
 } from '@/lib/queries';
 
 export const revalidate = 300;
@@ -18,10 +19,11 @@ const DOMAIN_ICON: Record<string, string> = {
 };
 
 export default async function Today() {
-  const [records, correlations, live] = await Promise.all([
+  const [records, correlations, live, insights] = await Promise.all([
     getRecords(10),
     getTopCorrelations(6, true),
     getLiveHighlights(),
+    getInsights(6),
   ]);
   const date = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -79,6 +81,19 @@ export default async function Today() {
             note={`This series just set a ${lead!.windowDays}-day ${lead!.kind}. The anomaly tool decides independently whether the point is a statistical outlier.`}
             height={380}
           />
+        </section>
+      )}
+
+      {insights.length > 0 && (
+        <section style={{ marginTop: 30 }}>
+          <div className="kicker">In context</div>
+          <p className="muted" style={{ fontSize: 13, marginTop: 6, maxWidth: '60ch' }}>
+            The numbers are computed from the database; the reading of them is
+            AI-written and labelled per card.
+          </p>
+          <div style={{ display: 'grid', gap: 16, marginTop: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(min(430px, 100%), 1fr))' }}>
+            {insights.map((i) => <InsightCard key={`${i.seriesId}-${i.createdAt}`} insight={i} />)}
+          </div>
         </section>
       )}
 

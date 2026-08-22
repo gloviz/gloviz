@@ -273,7 +273,22 @@ export async function getLiveHighlights(): Promise<LiveItem[]> {
   if (usd) items.push({ kicker: 'Euro exchange rate', headline: `$${usd.value.toFixed(4)} per EUR`,
     detail: 'ECB reference rate', ts: usd.ts, href: '/finance' });
 
-  return items.map((i) => ({ ...i, detail: `${i.detail} · ${ago(i.ts)}` }));
+  const withAge = items.map((i) => ({ ...i, detail: `${i.detail} · ${ago(i.ts)}` }));
+
+  // Fresh AI context headlines join the rotation, linking to the daily brief.
+  try {
+    const ins = await getInsights(3);
+    for (const i of ins) {
+      withAge.push({
+        kicker: 'In context',
+        headline: i.headline,
+        detail: `AI context · ${i.source} · ${ago(i.createdAt)}`,
+        ts: i.createdAt,
+        href: '/today',
+      });
+    }
+  } catch { /* insights table empty or unreachable */ }
+  return withAge;
 }
 
 /** Latest value per geography for several metrics, shaped as grid columns. */
@@ -835,4 +850,42 @@ export async function getScoreboard(): Promise<ScoreRow[]> {
       unit: x.unit, n: x.n, mae: Math.round((x.sum / x.n) * 1000) / 1000,
     }))
     .sort((a, b) => a.seriesTitle.localeCompare(b.seriesTitle) || a.mae - b.mae);
+}
+
+/* ------------------------------------------------------------------ *
+ * AI context reads.
+ * ------------------------------------------------------------------ */
+
+export interface Insight {
+  seriesId: number;
+  headline: string;
+  body: string;
+  facts: Record<string, unknown>;
+  model: string;
+  createdAt: string;
+  title: string;
+  unit: string;
+  source: string;
+  domain: string;
+}
+
+export async function getInsights(limit = 8): Promise<Insight[]> {
+  const db = readClient();
+  const { data } = await db
+    .from('insights')
+    .select('series_id, headline, body, facts, model, created_at, series(title, unit, domain, sources(name))')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return ((data ?? []) as any[]).map((r) => ({
+    seriesId: r.series_id,
+    headline: r.headline,
+    body: r.body,
+    facts: r.facts ?? {},
+    model: r.model,
+    createdAt: r.created_at,
+    title: r.series?.title ?? '',
+    unit: r.series?.unit ?? '',
+    source: r.series?.sources?.name ?? '',
+    domain: r.series?.domain ?? '',
+  }));
 }

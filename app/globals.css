@@ -388,3 +388,10 @@ html:root[data-theme] .orbit-cmdk__panel{
    idle. Hide the whole strip while its only content is the empty state; the
    moment a filter chip exists, the empty span is gone and the strip returns. */
 .orbit-chipstrip:has(.orbit-chipstrip__empty){display:none !important} /* !important: Orbit sets display:flex inline */
+
+/* AI insight cards */
+.insight .insightfacts{margin-top:12px;font-size:13px;color:var(--muted);
+  border-left:3px solid var(--amber);padding-left:12px}
+.insight .insightfacts strong{color:var(--text)}
+.insight .insightbody{margin-top:12px;display:grid;gap:10px}
+.insight .insightbody p{font-size:13.5px;line-height:1.65;color:var(--text)}
