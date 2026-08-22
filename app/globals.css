@@ -361,71 +361,12 @@ html:root[data-theme="midnatt"] .hcg-container{
   --ig-highlight-color-5:var(--surface2);
 }
 
-/* Orbit chrome. Orbit's own stylesheet colours its toolbar from
-   --highcharts-neutral-color-*, but one trigger rule kept resolving to the
-   other theme's muted tone after a theme switch, so these scoped rules
-   (specificity 0,2,1 plus a class) pin the chrome to the site tokens. */
-html:root[data-theme] .orbit-toolbar__trigger,
-html:root[data-theme] .orbit-toolbar2__item{color:var(--muted)}
-html:root[data-theme] .orbit-toolbar__trigger:hover,
-html:root[data-theme] .orbit-toolbar__trigger--open{color:var(--text)}
-html:root[data-theme] .orbit-toolbar__trigger--active,
-html:root[data-theme] .orbit-toolbar__back{color:var(--amber)}
-html:root[data-theme] .orbit-toolbar__dropdown,
-html:root[data-theme] .orbit-panel,
-html:root[data-theme] .orbit-ui [role="menu"],
-html:root[data-theme] .orbit-ui [role="listbox"]{
-  background:var(--surface);color:var(--text);border-color:var(--line-strong)}
-html:root[data-theme] .orbit-toolbar__dropdown-item{color:var(--text)}
-html:root[data-theme] .orbit-toolbar__dropdown-item:hover{background:var(--surface2)}
-html:root[data-theme] .orbit-toolbar__dropdown-item--active{
-  background:var(--amber);color:var(--on-amber)}
-html:root[data-theme] .orbit-ui input,
-html:root[data-theme] .orbit-ui select,
-html:root[data-theme] .orbit-ui textarea{
-  background:var(--surface2);color:var(--text);border-color:var(--line-strong)}
-
-/* Floating Orbit surfaces must be opaque, because they overlay the page.
-   Only the container gets a surface, a border and a shadow. The previous
-   version matched [class*="dropdown"], which also hit every child element
-   (item, icon, text, label) and painted 411 shadows. Exact class names only. */
+/* Orbit styles its own chrome. The one thing that needs correcting is the
+   floating dropdown, which renders transparent here: give the container a
+   surface so the page does not show through it. Nothing else is touched, so
+   Orbit's own borders, spacing and hover states stay exactly as designed. */
 html:root[data-theme] .orbit-toolbar__dropdown,
 html:root[data-theme] .orbit-toolbar__submenu,
-html:root[data-theme] .orbit-cmdk__panel,
-html:root[data-theme] .orbit-cmdk__list,
-html:root[data-theme] .orbit-popover,
-html:root[data-theme] .orbit-modal,
-html:root[data-theme] .orbit-dialog{
+html:root[data-theme] .orbit-cmdk__panel{
   background:var(--surface);
-  color:var(--text);
-  border:1px solid var(--line-strong);
-  box-shadow:0 18px 44px rgba(0,0,0,.28);
 }
-
-/* Children inherit the surface, never the chrome. */
-html:root[data-theme] .orbit-toolbar__dropdown *,
-html:root[data-theme] .orbit-toolbar__submenu *,
-html:root[data-theme] .orbit-cmdk__panel *,
-html:root[data-theme] .orbit-cmdk__list *{
-  box-shadow:none;
-  border-color:var(--line);
-  background:transparent;
-}
-
-/* The page-mode bar and the per-chart toolbar are inline chrome, not floating
-   surfaces: no shadow, no border, no fill. */
-html:root[data-theme] .orbit-page-topstack,
-html:root[data-theme] .orbit-menubar,
-html:root[data-theme] .orbit-toolbar,
-html:root[data-theme] .orbit-toolbar__menu,
-html:root[data-theme] .orbit-toolbar__submenu-wrap{
-  background:transparent;
-  border:0;
-  box-shadow:none;
-}
-
-html:root[data-theme] .orbit-toolbar__dropdown-item{color:var(--text)}
-html:root[data-theme] .orbit-toolbar__dropdown-item:hover{background:var(--surface2)}
-html:root[data-theme] .orbit-toolbar__dropdown-item--active{
-  background:var(--amber);color:var(--on-amber)}
-html:root[data-theme] .orbit-toolbar__dropdown-desc{color:var(--muted)}
