@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
@@ -8,6 +9,18 @@ export const revalidate = 300;
 export const metadata = {
   title: 'Correlations · GLOVIZ',
   description: 'What really moves together, what only looks like it, and how to tell the difference.',
+};
+
+/** Shared row grid for the two lists; a plain div layout on purpose, because
+ *  Orbit page mode converts real <table> elements into a Highcharts Grid and
+ *  strips the strength bars. */
+const ROW: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1.6fr 1.3fr 0.6fr 1.2fr 44px',
+  gap: 12,
+  alignItems: 'center',
+  padding: '10px 0',
+  borderTop: '1px solid var(--line)',
 };
 
 /** Plain-language strength label for a correlation value. */
@@ -108,7 +121,7 @@ export default async function Correlations() {
               type="spline"
               initialTool={i === 0 ? 'correlations' : undefined}
               note={`Correlation of levels ${c.r}; correlation of day-to-day changes ${c.rDiff} over ${c.overlap} shared days. The day-to-day number is the one that makes this pair credible.`}
-              extraOptions={{ yAxis: [{ title: { text: '' } }, { title: { text: '' }, opposite: true }], series: [{ yAxis: 0 }, { yAxis: 1 }] }}
+              dualAxis={['', '']}
               height={i === 0 ? 420 : 340}
             />
           ))}
@@ -118,35 +131,27 @@ export default async function Correlations() {
       <section style={{ marginTop: 30 }}>
         <div className="kicker">Passed: these move together day by day</div>
         <div className="card" style={{ marginTop: 14, overflowX: 'auto' }}>
-          <table>
-            <thead>
-              <tr>
-                <th>Pair</th>
-                <th>Day-to-day agreement</th>
-                <th>Shared days</th>
-                <th>Extra evidence</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {credible.map((c) => (
-                <tr key={`${c.a.id}-${c.b.id}`}>
-                  <td>{c.a.title} × {c.b.title}</td>
-                  <td>
-                    <Bar v={c.rDiff} color="var(--s3)" />
-                    <small className="muted">{words(c.rDiff)}</small>
-                  </td>
-                  <td>{c.overlap}</td>
-                  <td>
-                    {c.geoMatch && <span className="pill on" style={{ marginRight: 4 }}>same place</span>}
-                    {c.crossSource && <span className="pill">two independent sources</span>}
-                  </td>
-                  <td><Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link></td>
-                </tr>
-              ))}
-              {credible.length === 0 && <tr><td colSpan={5}>Nothing qualifies yet; the nightly job is still filling the table.</td></tr>}
-            </tbody>
-          </table>
+          <div style={{ minWidth: 720 }}>
+            <div style={{ ...ROW, borderTop: 'none', paddingTop: 0 }} className="kicker">
+              <span>Pair</span><span>Day-to-day agreement</span><span>Shared days</span><span>Extra evidence</span><span></span>
+            </div>
+            {credible.map((c) => (
+              <div key={`${c.a.id}-${c.b.id}`} style={ROW}>
+                <span style={{ fontSize: 13 }}>{c.a.title} × {c.b.title}</span>
+                <span>
+                  <Bar v={c.rDiff} color="var(--s3)" />
+                  <small className="muted">{words(c.rDiff)}</small>
+                </span>
+                <span style={{ fontSize: 13 }}>{c.overlap}</span>
+                <span>
+                  {c.geoMatch && <span className="pill on" style={{ marginRight: 4 }}>same place</span>}
+                  {c.crossSource && <span className="pill">two independent sources</span>}
+                </span>
+                <Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link>
+              </div>
+            ))}
+            {credible.length === 0 && <p className="muted" style={{ fontSize: 13 }}>Nothing qualifies yet; the nightly job is still filling the list.</p>}
+          </div>
         </div>
       </section>
 
@@ -168,37 +173,29 @@ export default async function Correlations() {
             series={[{ id: fake.a.id, name: fake.a.title }, { id: fake.b.id, name: fake.b.title }]}
             type="spline"
             note={`A deliberately spurious example. Levels correlate at ${fake.r}, but day-to-day changes only at ${fake.rDiff}, so the apparent link is two unrelated trends sharing a time period.`}
-            extraOptions={{ yAxis: [{ title: { text: '' } }, { title: { text: '' }, opposite: true }], series: [{ yAxis: 0 }, { yAxis: 1 }] }}
+            dualAxis={['', '']}
             height={340}
           />
         )}
         <div className="card" style={{ marginTop: 14, overflowX: 'auto' }}>
-          <table>
-            <thead>
-              <tr>
-                <th>Pair</th>
-                <th>Looks connected</th>
-                <th>Day-to-day test</th>
-                <th>Shared days</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {spurious.map((c) => (
-                <tr key={`${c.a.id}-${c.b.id}`}>
-                  <td>{c.a.title} × {c.b.title}</td>
-                  <td><Bar v={c.r} color="var(--s4)" /></td>
-                  <td>
-                    <Bar v={c.rDiff} color="var(--muted)" />
-                    <small className="muted">fails</small>
-                  </td>
-                  <td>{c.overlap}</td>
-                  <td><Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link></td>
-                </tr>
-              ))}
-              {spurious.length === 0 && <tr><td colSpan={5}>None flagged right now.</td></tr>}
-            </tbody>
-          </table>
+          <div style={{ minWidth: 720 }}>
+            <div style={{ ...ROW, borderTop: 'none', paddingTop: 0 }} className="kicker">
+              <span>Pair</span><span>Looks connected</span><span>Day-to-day test</span><span>Shared days</span><span></span>
+            </div>
+            {spurious.map((c) => (
+              <div key={`${c.a.id}-${c.b.id}`} style={ROW}>
+                <span style={{ fontSize: 13 }}>{c.a.title} × {c.b.title}</span>
+                <Bar v={c.r} color="var(--s4)" />
+                <span>
+                  <Bar v={c.rDiff} color="var(--faint)" />
+                  <small className="muted">fails</small>
+                </span>
+                <span style={{ fontSize: 13 }}>{c.overlap}</span>
+                <Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link>
+              </div>
+            ))}
+            {spurious.length === 0 && <p className="muted" style={{ fontSize: 13 }}>None flagged right now.</p>}
+          </div>
         </div>
       </section>
 

@@ -91,13 +91,7 @@ export default async function Explore({
               type="spline"
               initialTool="correlations"
               note={`Pearson r over ${pair.overlap} matched observations is ${pair.r}. The two series keep their own units, so the axes are independent.`}
-              extraOptions={{
-                yAxis: [
-                  { title: { text: pair.a.unit } },
-                  { title: { text: pair.b.unit }, opposite: true },
-                ],
-                series: [{ yAxis: 0 }, { yAxis: 1 }],
-              }}
+              dualAxis={[pair.a.unit, pair.b.unit]}
               height={440}
             />
 

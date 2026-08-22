@@ -45,6 +45,11 @@ export interface OrbitChartProps {
   /** Index every fetched series to 100 at its first value, so series with
    *  wildly different magnitudes (yen and dollars) share one axis. */
   rebase?: boolean;
+  /** Two y axes with these titles, series alternating between them. This is a
+   *  prop because passing `series: [{ yAxis: 0 }, ...]` via extraOptions
+   *  replaces the fetched data: Highcharts.merge copies arrays instead of
+   *  merging them, so those charts rendered empty. */
+  dualAxis?: [string, string];
 }
 
 /**
@@ -54,7 +59,7 @@ export interface OrbitChartProps {
 export default function OrbitChart({
   chartId, title, subtitle, unit, attribution, height = 360, iconHtml, live,
   series, staticSeries, type = 'line', tools, initialTool,
-  menuVisibility = 'always', extraOptions, note, fromMs, rebase,
+  menuVisibility = 'always', extraOptions, note, fromMs, rebase, dualAxis,
 }: OrbitChartProps) {
   const destroyed = useRef(false);
   // The chart is created once per effect run, so the effect has to depend on
@@ -144,7 +149,7 @@ export default function OrbitChart({
               ]);
             }
           }
-          return { type, name: s.name, data: points };
+          return { type, name: s.name, data: points, ...(dualAxis ? { yAxis: i % 2 } : {}) };
         });
       }
       if (destroyed.current || !H) return;
@@ -165,6 +170,14 @@ export default function OrbitChart({
         // required for date ticks (api.highcharts.com/highcharts/xAxis.type).
         // extraOptions merges after this and can still override.
         ...(series?.length ? { xAxis: { type: 'datetime' } } : {}),
+        // Both axes inherit the themed axis, second one on the right without
+        // a second set of grid lines (api.highcharts.com/highcharts/yAxis).
+        ...(dualAxis ? {
+          yAxis: [
+            H.merge(base.yAxis, { title: { text: dualAxis[0] } }),
+            H.merge(base.yAxis, { title: { text: dualAxis[1] }, opposite: true, gridLineWidth: 0 }),
+          ],
+        } : {}),
         series: resolved,
       }, extraOptions ?? {});
       // title.text defaults to "Chart title"
@@ -200,7 +213,7 @@ export default function OrbitChart({
       try { chart?.destroy(); } catch { /* orbit wraps the chart; ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartId, fromMs, seriesKey, staticKey, type, rebase]);
+  }, [chartId, fromMs, seriesKey, staticKey, type, rebase, dualAxis ? dualAxis.join('|') : '']);
 
   return (
     <div className="card chartwrap">

@@ -55,13 +55,7 @@ export default async function Surprise({
               type="spline"
               initialTool="insights"
               note={`Two series from different institutions whose changes co-move (differenced correlation filter applied). Pearson r is ${pair.r} over ${pair.overlap} matched observations. Correlation still is not causation.`}
-              extraOptions={{
-                yAxis: [
-                  { title: { text: pair.a.unit } },
-                  { title: { text: pair.b.unit }, opposite: true },
-                ],
-                series: [{ yAxis: 0 }, { yAxis: 1 }],
-              }}
+              dualAxis={[pair.a.unit, pair.b.unit]}
               height={460}
             />
 
