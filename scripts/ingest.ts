@@ -77,6 +77,24 @@ async function runAdapter(adapter: Adapter, window: FetchWindow): Promise<void> 
         .select('id')
         .single();
       if (sErr) throw sErr;
+      // Points in the future are predictions. They will be overwritten by
+      // actuals on later runs, so capture them in the ledger now: this is the
+      // only moment they exist as forecasts.
+      const nowIso = new Date().toISOString();
+      const future = p.observations.filter((o) => o.ts > nowIso && o.value !== null);
+      if (future.length) {
+        const { error: fErr } = await db.from('forecasts').upsert(
+          future.map((o) => ({
+            series_id: series.id,
+            predictor: 'source',
+            predicted_for: o.ts,
+            predicted_at: nowIso,
+            value: o.value,
+          })),
+          { onConflict: 'series_id,predictor,predicted_for,predicted_at', ignoreDuplicates: true },
+        );
+        if (fErr) console.warn(`forecast capture: ${fErr.message}`);
+      }
       for (let i = 0; i < p.observations.length; i += CHUNK) {
         const chunk = p.observations
           .slice(i, i + CHUNK)
