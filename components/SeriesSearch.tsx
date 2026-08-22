@@ -33,6 +33,19 @@ export default function SeriesSearch({ options }: { options: MetricOption[] }) {
 
   useEffect(() => { if (open) inputRef.current?.focus(); setCursor(0); }, [open, query]);
 
+  // Close on any click outside the box. The veil alone is not enough: other
+  // fixed layers (Orbit's page bar among them) sit above it and swallow the
+  // click, so listen at the document level instead.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      const box = document.querySelector('.searchbox');
+      if (box && !box.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown, true);
+    return () => document.removeEventListener('mousedown', onDown, true);
+  }, [open]);
+
   const hits = query.length < 2 ? [] : options
     .filter((o) => `${o.label} ${o.source} ${o.domain}`.toLowerCase().includes(query.toLowerCase()))
     .slice(0, 9);
