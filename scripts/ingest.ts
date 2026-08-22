@@ -98,8 +98,12 @@ async function runAdapter(adapter: Adapter, window: FetchWindow): Promise<void> 
         );
         if (fErr) console.warn(`forecast capture: ${fErr.message}`);
       }
-      for (let i = 0; i < p.observations.length; i += CHUNK) {
-        const chunk = p.observations
+      // Dedupe on ts (last value wins): a payload with the same timestamp
+      // twice makes Postgres reject the whole upsert with error 21000
+      // ("cannot affect row a second time"). Maddison via OWID does this.
+      const deduped = [...new Map(p.observations.map((o) => [o.ts, o])).values()];
+      for (let i = 0; i < deduped.length; i += CHUNK) {
+        const chunk = deduped
           .slice(i, i + CHUNK)
           .map((o) => ({ series_id: series.id, ts: o.ts, value: o.value }));
         const { error: oErr } = await db
@@ -111,7 +115,9 @@ async function runAdapter(adapter: Adapter, window: FetchWindow): Promise<void> 
     }
   } catch (err) {
     status = 'error';
-    errorMsg = err instanceof Error ? err.message : String(err);
+    // PostgrestError is a plain object, not an Error: String() gave
+    // "[object Object]" and hid the real cause.
+    errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
   }
 
   await db

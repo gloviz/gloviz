@@ -65,7 +65,9 @@ export const owidIndicators: Adapter = {
         const v = Number(r[iVal]);
         if (!Number.isFinite(v)) continue;
         if (!byCode.has(code)) byCode.set(code, []);
-        byCode.get(code)!.push({ ts: `${r[iYear]}-01-01T00:00:00Z`, value: v });
+        // Maddison reaches year 1. An unpadded '1-01-01' is read by Postgres
+        // as 2001-01-01, which collided with the real 2001 row (error 21000).
+        byCode.get(code)!.push({ ts: `${String(r[iYear]).padStart(4, '0')}-01-01T00:00:00Z`, value: v });
       }
       for (const [code, observations] of byCode) {
         out.push({
