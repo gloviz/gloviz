@@ -905,7 +905,7 @@ export async function getCorrelationBoard() {
   const db = readClient();
   const { data } = await db
     .from('correlations')
-    .select('series_a, series_b, r, r_diff, overlap, cross_source, geo_match, a:series!correlations_series_a_fkey(id, title, geo_code), b:series!correlations_series_b_fkey(id, title, geo_code)')
+    .select('series_a, series_b, r, r_diff, overlap, cross_source, geo_match, lag_days, r_lag, a:series!correlations_series_a_fkey(id, title, geo_code), b:series!correlations_series_b_fkey(id, title, geo_code)')
     .not('r_diff', 'is', null)
     .limit(1500);
   const rows = ((data ?? []) as any[]).map((c) => ({
@@ -913,6 +913,7 @@ export async function getCorrelationBoard() {
     b: { id: c.b?.id, title: c.b?.title ?? '', geo: c.b?.geo_code },
     r: Number(c.r), rDiff: Number(c.r_diff), overlap: c.overlap,
     crossSource: c.cross_source, geoMatch: c.geo_match,
+    lagDays: c.lag_days as number | null, rLag: c.r_lag as number | null,
   }));
   // Credible: the changes move together too, with enough data behind them.
   const credible = rows
@@ -958,4 +959,155 @@ export async function getWeekly(): Promise<Insight | null> {
   if (!r) return null;
   return { seriesId: 0, headline: r.headline, body: r.body, facts: r.facts ?? {},
     model: r.model, createdAt: r.created_at, title: '', unit: '', source: '', domain: '' };
+}
+
+/* ------------------------- Deep history (0016) ------------------------- */
+
+export interface ClimatologyRow {
+  doy: number; p10: number | null; p50: number | null; p90: number | null;
+  minValue: number | null; minYear: number | null;
+  maxValue: number | null; maxYear: number | null; n: number;
+}
+
+/** Full day-of-year climatology for one series (up to 366 rows). */
+export async function getClimatology(seriesId: number): Promise<ClimatologyRow[]> {
+  const db = readClient();
+  const { data } = await db
+    .from('climatology')
+    .select('doy, p10, p50, p90, min_value, min_year, max_value, max_year, n')
+    .eq('series_id', seriesId)
+    .order('doy');
+  return ((data ?? []) as any[]).map((r) => ({
+    doy: r.doy, p10: r.p10, p50: r.p50, p90: r.p90,
+    minValue: r.min_value, minYear: r.min_year,
+    maxValue: r.max_value, maxYear: r.max_year, n: r.n,
+  }));
+}
+
+/** Approximate percentile of v given a climatology row, piecewise linear. */
+export function percentileOf(v: number, c: ClimatologyRow): number | null {
+  const pts: [number, number][] = [];
+  if (c.minValue !== null) pts.push([c.minValue, 0]);
+  if (c.p10 !== null) pts.push([c.p10, 10]);
+  if (c.p50 !== null) pts.push([c.p50, 50]);
+  if (c.p90 !== null) pts.push([c.p90, 90]);
+  if (c.maxValue !== null) pts.push([c.maxValue, 100]);
+  if (pts.length < 2) return null;
+  if (v <= pts[0][0]) return 0;
+  if (v >= pts[pts.length - 1][0]) return 100;
+  for (let i = 1; i < pts.length; i++) {
+    if (v <= pts[i][0]) {
+      const [x0, y0] = pts[i - 1]; const [x1, y1] = pts[i];
+      return Math.round(x1 === x0 ? y0 : y0 + ((v - x0) / (x1 - x0)) * (y1 - y0));
+    }
+  }
+  return null;
+}
+
+const dayOfYear = (d: Date) =>
+  Math.floor((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 0)) / 86_400_000);
+
+export interface CityToday {
+  seriesId: number; city: string; geo: string;
+  live: number | null; liveTs: string | null;
+  clim: ClimatologyRow | null; percentile: number | null;
+}
+
+/**
+ * Today vs the 1940+ record, per city: the live Open-Meteo temperature
+ * matched by city name against the ERA5 series' climatology for this
+ * day of year.
+ */
+export async function getTodayVsNormal(): Promise<CityToday[]> {
+  const db = readClient();
+  const doy = dayOfYear(new Date());
+  const [{ data: era5 }, { data: clim }, { data: live }] = await Promise.all([
+    db.from('series')
+      .select('id, geo_code, metadata')
+      .like('external_id', 'era5:temperature_2m_mean:%'),
+    db.from('climatology').select('*').eq('doy', doy),
+    db.from('series')
+      .select('id, title, series_latest(ts, value)')
+      .like('external_id', 'temperature_2m:%'),
+  ]);
+  const climBy = new Map(((clim ?? []) as any[]).map((c) => [c.series_id, c]));
+  const liveByCity = new Map<string, { ts: string; value: number }>();
+  for (const s of (live ?? []) as any[]) {
+    const l = Array.isArray(s.series_latest) ? s.series_latest[0] : s.series_latest;
+    // Live titles are "Temperature <City>".
+    const city = String(s.title).replace(/^Temperature /, '');
+    if (l && l.value !== null) liveByCity.set(city, { ts: l.ts, value: Number(l.value) });
+  }
+  return ((era5 ?? []) as any[]).map((s) => {
+    const city = (s.metadata as any)?.city ?? '';
+    const c = climBy.get(s.id);
+    const row: ClimatologyRow | null = c ? {
+      doy: c.doy, p10: c.p10, p50: c.p50, p90: c.p90,
+      minValue: c.min_value, minYear: c.min_year,
+      maxValue: c.max_value, maxYear: c.max_year, n: c.n,
+    } : null;
+    const lv = liveByCity.get(city) ?? null;
+    return {
+      seriesId: s.id, city, geo: s.geo_code,
+      live: lv?.value ?? null, liveTs: lv?.ts ?? null,
+      clim: row,
+      percentile: lv && row ? percentileOf(lv.value, row) : null,
+    };
+  }).filter((r) => r.clim !== null).sort((a, b) => (b.percentile ?? -1) - (a.percentile ?? -1));
+}
+
+export interface AllTimeRecord {
+  seriesId: number; city: string;
+  hottest: { value: number; year: number; doy: number } | null;
+  coldest: { value: number; year: number; doy: number } | null;
+  since: number;
+}
+
+/** All-time extremes per ERA5 temperature series, read from climatology. */
+export async function getAllTimeRecords(): Promise<AllTimeRecord[]> {
+  const db = readClient();
+  const { data: era5 } = await db
+    .from('series')
+    .select('id, metadata')
+    .like('external_id', 'era5:temperature_2m_mean:%');
+  const rows = (era5 ?? []) as any[];
+  if (!rows.length) return [];
+  const ids = rows.map((r) => r.id);
+  const { data: clim } = await db
+    .from('climatology')
+    .select('series_id, doy, min_value, min_year, max_value, max_year')
+    .in('series_id', ids)
+    .limit(20000);
+  const by = new Map<number, AllTimeRecord>();
+  for (const r of rows) {
+    by.set(r.id, {
+      seriesId: r.id, city: (r.metadata as any)?.city ?? '',
+      hottest: null, coldest: null, since: 1940,
+    });
+  }
+  for (const c of (clim ?? []) as any[]) {
+    const rec = by.get(c.series_id);
+    if (!rec) continue;
+    if (c.max_value !== null && (!rec.hottest || c.max_value > rec.hottest.value)) {
+      rec.hottest = { value: c.max_value, year: c.max_year, doy: c.doy };
+    }
+    if (c.min_value !== null && (!rec.coldest || c.min_value < rec.coldest.value)) {
+      rec.coldest = { value: c.min_value, year: c.min_year, doy: c.doy };
+    }
+  }
+  return [...by.values()].filter((r) => r.hottest && r.coldest)
+    .sort((a, b) => (b.hottest!.value - a.hottest!.value));
+}
+
+/** Month name for a day-of-year, for "July 2019" style labels. */
+export function doyLabel(doy: number): string {
+  const d = new Date(Date.UTC(2001, 0, doy));
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+}
+
+
+/** [epoch ms, value] pairs for one series from a given time, for server pages. */
+export async function getSeriesPoints(id: number, fromMs: number): Promise<[number, number][]> {
+  const all = await readSeries(id);
+  return all.filter((o) => o.ts >= fromMs).map((o) => [o.ts, o.value] as [number, number]);
 }

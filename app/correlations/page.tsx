@@ -145,7 +145,12 @@ export default async function Correlations() {
                 <span style={{ fontSize: 13 }}>{c.overlap}</span>
                 <span>
                   {c.geoMatch && <span className="pill on" style={{ marginRight: 4 }}>same place</span>}
-                  {c.crossSource && <span className="pill">two independent sources</span>}
+                  {c.crossSource && <span className="pill" style={{ marginRight: 4 }}>two independent sources</span>}
+                  {c.lagDays != null && (
+                    <span className="pill">
+                      {c.lagDays > 0 ? `${c.a.title.split(' ')[0]} leads by ${c.lagDays}` : `${c.b.title.split(' ')[0]} leads by ${-c.lagDays}`}
+                    </span>
+                  )}
                 </span>
                 <Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link>
               </div>

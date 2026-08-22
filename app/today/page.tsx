@@ -4,7 +4,8 @@ import OrbitPageMode from '@/components/OrbitPageMode';
 import { ICONS } from '@/lib/icons';
 import InsightCard from '@/components/InsightCard';
 import {
-  getInsights, getLiveHighlights, getRecords, getSeriesRefs, getTopCorrelations, getWeekly,
+  doyLabel, getInsights, getLiveHighlights, getRecords, getSeriesRefs,
+  getTodayVsNormal, getTopCorrelations, getWeekly,
 } from '@/lib/queries';
 
 export const revalidate = 300;
@@ -19,13 +20,15 @@ const DOMAIN_ICON: Record<string, string> = {
 };
 
 export default async function Today() {
-  const [records, correlations, live, insights, weekly] = await Promise.all([
+  const [records, correlations, live, insights, weekly, vsNormal] = await Promise.all([
     getRecords(10),
     getTopCorrelations(6, true),
     getLiveHighlights(),
     getInsights(6),
     getWeekly(),
+    getTodayVsNormal(),
   ]);
+  const onThisDay = vsNormal.filter((t) => t.percentile !== null).slice(0, 3);
   const date = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
@@ -45,6 +48,25 @@ export default async function Today() {
           <div className="card insight">
             <div className="ch"><div><b>{weekly.headline}</b><small>The week in data · AI summary of the week&apos;s recorded events</small></div></div>
             <div className="insightbody"><p>{weekly.body}</p></div>
+          </div>
+        </section>
+      )}
+
+      {onThisDay.length > 0 && (
+        <section style={{ marginTop: 26 }}>
+          <div className="kicker">On this day, against 85 years · <Link href="/records" style={{ color: 'var(--amber)' }}>all records</Link></div>
+          <div className="grid3" style={{ marginTop: 14 }}>
+            {onThisDay.map((t) => (
+              <div className="card" key={t.seriesId}>
+                <b>{t.city}: {t.live?.toFixed(1)}° now</b>
+                <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+                  Percentile {t.percentile} for a {doyLabel(t.clim!.doy)} since 1940.
+                  The record for this date is {t.clim!.maxValue?.toFixed(1)}°
+                  ({t.clim!.maxYear}); the coldest was {t.clim!.minValue?.toFixed(1)}°
+                  ({t.clim!.minYear}).
+                </p>
+              </div>
+            ))}
           </div>
         </section>
       )}

@@ -64,20 +64,48 @@ export const era5History: Adapter = {
     const end = new Date(Date.now() - 6 * 86_400_000).toISOString().slice(0, 10);
     if (start >= end) return out;
 
+    // The free tier rate-limits by request weight: one request for 85 years
+    // of daily data across 30 cities returns HTTP 429 (hit in production on
+    // 2026-08-22). Chunk the range per decade and pause between requests.
+    const chunks: { from: string; to: string }[] = [];
+    for (let y = Number(start.slice(0, 4)); ; y += 10) {
+      const from = `${y}-01-01` < start ? start : `${y}-01-01`;
+      const to = `${y + 9}-12-31` > end ? end : `${y + 9}-12-31`;
+      chunks.push({ from, to });
+      if (to === end) break;
+    }
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     for (const city of CITIES) {
-      const url =
-        'https://archive-api.open-meteo.com/v1/archive' +
-        `?latitude=${city.lat}&longitude=${city.lon}` +
-        `&start_date=${start}&end_date=${end}` +
-        `&daily=${VARS.map((v) => v.key).join(',')}&timezone=UTC`;
-      const res = await fetchWithRetry(url);
-      const body = await res.json() as {
-        daily?: Record<string, (string | number | null)[]>;
-      };
-      const time = (body.daily?.time ?? []) as string[];
-      if (!time.length) continue;
+      const byVar = new Map<string, { ts: string; value: number | null }[]>(
+        VARS.map((v) => [v.key, []]));
+      for (const ch of chunks) {
+        const url =
+          'https://archive-api.open-meteo.com/v1/archive' +
+          `?latitude=${city.lat}&longitude=${city.lon}` +
+          `&start_date=${ch.from}&end_date=${ch.to}` +
+          `&daily=${VARS.map((v) => v.key).join(',')}&timezone=UTC`;
+        let body: { daily?: Record<string, (string | number | null)[]> };
+        try {
+          body = await (await fetchWithRetry(url)).json();
+        } catch (err) {
+          // One long pause on a rate limit, then a final attempt.
+          await sleep(65_000);
+          body = await (await fetchWithRetry(url)).json();
+        }
+        const time = (body.daily?.time ?? []) as string[];
+        for (const v of VARS) {
+          const values = (body.daily?.[v.key] ?? []) as (number | null)[];
+          byVar.get(v.key)!.push(...time.map((t, i) => ({
+            ts: `${t}T00:00:00Z`,
+            value: typeof values[i] === 'number' ? (values[i] as number) : null,
+          })));
+        }
+        await sleep(1500);
+      }
       for (const v of VARS) {
-        const values = (body.daily?.[v.key] ?? []) as (number | null)[];
+        const observations = byVar.get(v.key)!;
+        if (!observations.length) continue;
         out.push({
           externalId: `era5:${v.key}:${city.name.toLowerCase().replace(/ /g, '-')}`,
           title: `${v.label} ${city.name} (since 1940)`,
@@ -86,10 +114,7 @@ export const era5History: Adapter = {
           unit: v.unit,
           frequency: 'daily',
           metadata: { city: city.name, lat: city.lat, lon: city.lon, reanalysis: 'ERA5' },
-          observations: time.map((t, i) => ({
-            ts: `${t}T00:00:00Z`,
-            value: typeof values[i] === 'number' ? (values[i] as number) : null,
-          })),
+          observations,
         });
       }
     }
