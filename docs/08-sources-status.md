@@ -75,3 +75,18 @@ Orbit's own Forecast tool: the IMF's projection against a statistical one.
 | Nightly, 02:30 UTC | retention sweep, `prune_observations('5 years')` |
 
 FRED is revised constantly and is re-read on a five-year window whenever it runs.
+
+
+## Insight layer (added 2026-08)
+
+Three tables computed from the observations, populated by
+`scripts/insights.ts` (nightly, 03:50 UTC) and by ingest itself:
+
+| Table | Written by | Read by |
+|---|---|---|
+| `records` | insights job: latest value vs its own 90-day range | `/today`, ticker |
+| `correlations` | insights job: Pearson r for same-cadence pairs, sampled and bounded | `/surprise`, explorer suggestions, `/today` |
+| `forecasts` | **ingest** captures any observation with a future timestamp at the moment it exists; insights adds naive and drift baselines and scores everything whose target time has passed | `/forecasts` |
+
+The forecast principle: GLOVIZ does not out-forecast the institutions, it keeps
+their receipts. The naive baseline (tomorrow = today) is the honesty benchmark.
