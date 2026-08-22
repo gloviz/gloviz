@@ -54,6 +54,11 @@ export default function OrbitChart({
   menuVisibility = 'always', extraOptions, note, fromMs,
 }: OrbitChartProps) {
   const destroyed = useRef(false);
+  // The chart is created once per effect run, so the effect has to depend on
+  // the data it draws. Watching only chartId meant that adding a country on
+  // /compare updated the URL and the chips but never the chart.
+  const seriesKey = (series ?? []).map((s) => s.id).join(',');
+  const staticKey = staticSeries ? JSON.stringify(staticSeries).length : 0;
 
   useEffect(() => {
     destroyed.current = false;
@@ -176,7 +181,7 @@ export default function OrbitChart({
       try { chart?.destroy(); } catch { /* orbit wraps the chart; ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartId, fromMs]);
+  }, [chartId, fromMs, seriesKey, staticKey, type]);
 
   return (
     <div className="card chartwrap">

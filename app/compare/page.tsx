@@ -69,7 +69,7 @@ export default async function Compare({
           <div style={{ display: 'grid', gap: 18 }}>
             {list.map((m) => (
               <OrbitChart
-                key={m.metric}
+                key={`${m.metric}-${codes.join('-')}`}
                 chartId={`cmp-${m.metric.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}
                 title={m.title}
                 subtitle={`${m.source} · ${m.frequency} · ${m.unit}`}
