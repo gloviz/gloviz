@@ -18,6 +18,8 @@ import { imf } from '../lib/adapters/imf';
 import { energiDataService } from '../lib/adapters/energidataservice';
 import { carbonIntensity } from '../lib/adapters/carbonintensity';
 import { ssb } from '../lib/adapters/ssb';
+import { era5History } from '../lib/adapters/era5';
+import { noaaCo2, nasaGistemp, nsidcSeaIce, silsoSunspots } from '../lib/adapters/longseries';
 
 export const ADAPTERS: Adapter[] = [
   entsoeDayAhead,
@@ -38,6 +40,7 @@ export const ADAPTERS: Adapter[] = [
   energiDataService,
   carbonIntensity,
   ssb,
+  era5History, noaaCo2, nasaGistemp, nsidcSeaIce, silsoSunspots,
 ];
 
 const CHUNK = 5000;

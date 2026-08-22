@@ -111,6 +111,24 @@ async function computeCorrelations(all: SeriesRow[]): Promise<number> {
         const dx = xs.slice(1).map((v, k) => v - xs[k]);
         const dy = ys.slice(1).map((v, k) => v - ys[k]);
         const rDiff = pearson(dx, dy);
+        // Lead/lag: shift the differenced series against each other and keep
+        // the offset with the strongest |r|. Positive lag means A leads B.
+        let lagDays: number | null = null;
+        let rLag: number | null = null;
+        if (dx.length >= 40) {
+          let best = Math.abs(rDiff); let bestLag = 0; let bestR = rDiff;
+          for (let lag = -14; lag <= 14; lag++) {
+            if (lag === 0) continue;
+            const ax = lag > 0 ? dx.slice(0, dx.length - lag) : dx.slice(-lag);
+            const by = lag > 0 ? dy.slice(lag) : dy.slice(0, dy.length + lag);
+            if (ax.length < 30) continue;
+            const rl = pearson(ax, by);
+            if (Math.abs(rl) > best) { best = Math.abs(rl); bestLag = lag; bestR = rl; }
+          }
+          if (bestLag !== 0 && best >= Math.abs(rDiff) + 0.1 && best >= 0.4) {
+            lagDays = bestLag; rLag = Math.round(bestR * 1000) / 1000;
+          }
+        }
         const [lo, hi] = sample[i].id < sample[j].id
           ? [sample[i], sample[j]] : [sample[j], sample[i]];
         const { error } = await db.from('correlations').upsert({
@@ -120,6 +138,9 @@ async function computeCorrelations(all: SeriesRow[]): Promise<number> {
           overlap: xs.length,
           cross_source: lo.source_id !== hi.source_id,
           geo_match: lo.geo_code === hi.geo_code,
+          // Lag is computed in a/b order; flip the sign if the upsert flipped the pair.
+          lag_days: lagDays === null ? null : (sample[i].id === lo.id ? lagDays : -lagDays),
+          r_lag: rLag,
           computed_at: new Date().toISOString(),
         }, { onConflict: 'series_a,series_b' });
         if (!error) written++;
@@ -199,6 +220,9 @@ async function main(): Promise<void> {
   console.log('correlations written:', await computeCorrelations(all));
   console.log('baselines written:', await writeBaselines(all));
   console.log('forecasts scored:', await scoreForecasts());
+  // Day-of-year climatology, computed entirely in Postgres (migration 0016).
+  const { data: clim, error: climErr } = await db.rpc('refresh_climatology', { min_years: 10 });
+  console.log('climatology rows:', climErr ? `error: ${climErr.message}` : clim);
 }
 
 main();

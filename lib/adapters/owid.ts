@@ -14,6 +14,11 @@ const DATASETS: {
     title: 'Energy use per capita', unit: 'kWh', domain: 'energy' },
   { slug: 'share-electricity-renewables', column: 'Renewables - % electricity',
     title: 'Renewable electricity share', unit: '% of electricity', domain: 'energy' },
+  // Deep time: Maddison Project via OWID (some countries back to year 1).
+  { slug: 'gdp-per-capita-maddison-project-database', column: 'GDP per capita',
+    title: 'GDP per capita (Maddison)', unit: 'intl-$ (2011)', domain: 'economy' },
+  { slug: 'life-expectancy', column: 'Life expectancy',
+    title: 'Life expectancy (long run)', unit: 'years', domain: 'health' },
 ];
 
 const COUNTRIES = new Set([

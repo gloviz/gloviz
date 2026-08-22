@@ -39,10 +39,10 @@ jobs:
             echo "jobs=open-meteo:weather entsoe:day-ahead opensky:flights eds:power carbonintensity:uk" >> "$GITHUB_OUTPUT"
             echo "days=2" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "40 6 * * *" ]; then
-            echo "jobs=ecb:fx usgs:quakes nasa-power:climate" >> "$GITHUB_OUTPUT"
+            echo "jobs=ecb:fx usgs:quakes nasa-power:climate era5:history nsidc:extent" >> "$GITHUB_OUTPUT"
             echo "days=7" >> "$GITHUB_OUTPUT"
           else
-            echo "jobs=worldbank:indicators owid:indicators who:indicators eurostat:indicators oecd:indicators gbif:occurrences imf:indicators ssb:indicators" >> "$GITHUB_OUTPUT"
+            echo "jobs=worldbank:indicators owid:indicators who:indicators eurostat:indicators oecd:indicators gbif:occurrences imf:indicators ssb:indicators noaa-gml:co2 nasa-gistemp:global silso:sunspots" >> "$GITHUB_OUTPUT"
             echo "days=1" >> "$GITHUB_OUTPUT"
           fi
 
