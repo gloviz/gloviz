@@ -8,7 +8,7 @@ import { MARK_SVG } from '@/lib/artwork';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gloviz.app'),
-  title: 'GLOVIZ: the world\'s open data, live',
+  title: "The world's open data, live · GLOVIZ",
   description:
     'Economy, energy, climate, health and transport for 190+ countries, streamed from the world\'s best open APIs and analyzed in the chart with Highcharts Orbit.',
 };

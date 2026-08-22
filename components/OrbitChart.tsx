@@ -125,7 +125,11 @@ export default function OrbitChart({
           dataLabels: { color: css('--text', '#e6ecf0'), style: { textOutline: 'none' } },
         },
         map: { nullColor: css('--surface2', '#18242f') },
-        treemap: { dataLabels: { style: { color: css('--text', '#e6ecf0'), textOutline: 'none' } } },
+        // Treemap tiles are painted in series colors (deep blue in light
+        // mode, ice blue in dark), so the label must contrast with the TILE,
+        // not the page: the surface color works in both themes. Black text on
+        // the blue tiles was unreadable in light mode.
+        treemap: { dataLabels: { style: { color: css('--surface', '#111a24'), fontWeight: '600', textOutline: 'none' } } },
       },
       credits: { enabled: false },
       accessibility: { enabled: true },
