@@ -97,7 +97,7 @@ export default async function Home() {
             { href: '/explore', icon: 'correlations', title: 'Any two series', lead: 'Paired on time, correlation computed' },
             { href: '/compare', icon: 'economy', title: 'Up to five countries', lead: 'Every shared metric on one axis' },
             { href: '/race', icon: 'forecast', title: 'Ranking race', lead: 'Drag the year, watch the order change' },
-            { href: '/surprise', icon: 'ai', title: 'Surprise me', lead: 'Two unrelated sources, correlated anyway' },
+            { href: '/correlations', icon: 'correlations', title: 'Correlations', lead: 'Which ones survive differencing, which are trend artifacts' },
             { href: '/stories/the-heat-right-now', icon: 'climate', title: 'The heat right now', lead: 'Thirty cities, last 24 hours' },
             { href: '/stories/the-ground-is-moving', icon: 'environment', title: 'The ground is moving', lead: 'Every M4+ quake today' },
             { href: '/stories/how-clean-is-the-power', icon: 'zap', title: 'How clean is the power', lead: 'Grid CO2, five minutes apart' },

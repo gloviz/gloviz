@@ -8,7 +8,7 @@ const PAGES = [
   '/stories/what-you-are-breathing', '/stories/how-clean-is-the-power',
   '/stories/everything-in-the-air',
   '/explore', '/race', '/surprise', '/markets', '/nature', '/transport',
-  '/today', '/forecasts',
+  '/today', '/forecasts', '/correlations',
   '/status',
 ];
 

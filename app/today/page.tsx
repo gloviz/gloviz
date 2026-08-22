@@ -4,7 +4,7 @@ import OrbitPageMode from '@/components/OrbitPageMode';
 import { ICONS } from '@/lib/icons';
 import InsightCard from '@/components/InsightCard';
 import {
-  getInsights, getLiveHighlights, getRecords, getSeriesRefs, getTopCorrelations,
+  getInsights, getLiveHighlights, getRecords, getSeriesRefs, getTopCorrelations, getWeekly,
 } from '@/lib/queries';
 
 export const revalidate = 300;
@@ -19,11 +19,12 @@ const DOMAIN_ICON: Record<string, string> = {
 };
 
 export default async function Today() {
-  const [records, correlations, live, insights] = await Promise.all([
+  const [records, correlations, live, insights, weekly] = await Promise.all([
     getRecords(10),
     getTopCorrelations(6, true),
     getLiveHighlights(),
     getInsights(6),
+    getWeekly(),
   ]);
   const date = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -38,6 +39,15 @@ export default async function Today() {
         <span className="dot" /> {date} · written by the database, refreshed every five minutes
       </div>
       <h2 style={{ marginTop: 12 }}>To<em>day</em></h2>
+
+      {weekly && (
+        <section style={{ marginTop: 24 }}>
+          <div className="card insight">
+            <div className="ch"><div><b>{weekly.headline}</b><small>The week in data · AI summary of the week&apos;s recorded events</small></div></div>
+            <div className="insightbody"><p>{weekly.body}</p></div>
+          </div>
+        </section>
+      )}
 
       <section style={{ marginTop: 26 }}>
         <div className="kicker">Records set</div>
@@ -112,7 +122,7 @@ export default async function Today() {
       </section>
 
       <section style={{ marginTop: 30 }}>
-        <div className="kicker">Strongest cross-source correlations</div>
+        <div className="kicker">Strongest cross-source correlations · <Link href="/correlations" style={{ color: 'var(--amber)' }}>the full board</Link></div>
         <p className="muted" style={{ fontSize: 13, marginTop: 6, maxWidth: '60ch' }}>
           Two institutions, no shared method, moving together anyway. Click one
           to inspect it; remember that correlation is cheap.

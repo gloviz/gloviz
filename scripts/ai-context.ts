@@ -97,10 +97,10 @@ Recorded range: ${fact.min} to ${fact.max}
 Status: ${fact.sinceLabel}
 
 Write for a curious general reader, in English:
-1. HEADLINE: one line, max 80 characters, concrete, no hype.
-2. BODY: two short paragraphs. First: what this series measures and what typically drives it up or down. Second: what this level has historically coincided with, and one thing worth watching next.
+1. HEADLINE: one line, max 70 characters, concrete, no hype.
+2. BODY: ONE paragraph, maximum 45 words. Say what typically drives this series and what this level has historically meant. Every word must earn its place; no scene-setting, no "it's worth noting".
 
-Rules: never invent numbers beyond the facts above; if causes are uncertain, say so plainly; no investment advice; no exclamation marks.
+Rules: never invent numbers beyond the facts above; if causes are uncertain, say so in three words, not a sentence; no investment advice; no exclamation marks.
 
 Answer as minified single-line JSON, with \\n\\n inside the body string separating the paragraphs: {"headline": "...", "body": "..."}`;
 

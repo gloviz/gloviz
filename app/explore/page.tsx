@@ -3,7 +3,7 @@ import MetricPicker from '@/components/MetricPicker';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
 import { ICONS } from '@/lib/icons';
-import { getMetricOptions, getPair, getTopCorrelations } from '@/lib/queries';
+import { getCorrelationBoard, getMetricOptions, getPair } from '@/lib/queries';
 
 export const revalidate = 300;
 export const metadata = { title: 'Metric explorer · GLOVIZ' };
@@ -20,12 +20,18 @@ export default async function Explore({
   searchParams,
 }: { searchParams: Promise<{ x?: string; y?: string }> }) {
   const sp = await searchParams;
-  const [options, suggestions] = await Promise.all([
+  const [options, board] = await Promise.all([
     getMetricOptions(400),
-    getTopCorrelations(8, true),
+    getCorrelationBoard(),
   ]);
-  const fallbackX = options.find((o) => o.label.startsWith('Temperature'))?.id ?? options[0]?.id;
-  const fallbackY = options.find((o) => o.label.includes('CO2 intensity'))?.id
+  // Suggestions and the default pair are credible co-movements (the changes
+  // agree), so the first thing a visitor sees is apples against apples.
+  const suggestions = board.credible.slice(0, 8).map((c) => ({
+    a: { id: c.a.id, title: c.a.title }, b: { id: c.b.id, title: c.b.title }, r: c.rDiff,
+  }));
+  const fallbackX = suggestions[0]?.a.id
+    ?? options.find((o) => o.label.startsWith('Temperature'))?.id ?? options[0]?.id;
+  const fallbackY = suggestions[0]?.b.id
     ?? options.find((o) => o.id !== fallbackX)?.id;
   const x = Number(sp.x) || fallbackX || 0;
   const y = Number(sp.y) || fallbackY || 0;
@@ -57,7 +63,7 @@ export default async function Explore({
           </span>
           {suggestions.map((s) => (
             <Link key={`${s.a.id}-${s.b.id}`} className="chipopt" href={`/explore?x=${s.a.id}&y=${s.b.id}`}>
-              {s.a.title.slice(0, 26)} × {s.b.title.slice(0, 26)} (r={s.r})
+              {s.a.title.slice(0, 26)} × {s.b.title.slice(0, 26)} (rΔ={s.r})
             </Link>
           ))}
         </div>

@@ -53,6 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <span className="r">
             <Link href="/today">Today</Link>
             <Link href="/forecasts">Forecasts</Link>
+            <Link href="/correlations">Correlations</Link>
             <Link href="/stories">Stories</Link>
             <Link href="/explore">Explorer</Link>
             <Link href="/status">API status</Link>

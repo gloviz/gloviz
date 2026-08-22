@@ -106,13 +106,20 @@ async function computeCorrelations(all: SeriesRow[]): Promise<number> {
         if (xs.length < 20) continue;
         const r = pearson(xs, ys);
         if (Math.abs(r) < 0.5) continue;
+        // Credibility test: correlate the CHANGES. Trends correlate in levels
+        // for free; only genuine co-movement survives differencing.
+        const dx = xs.slice(1).map((v, k) => v - xs[k]);
+        const dy = ys.slice(1).map((v, k) => v - ys[k]);
+        const rDiff = pearson(dx, dy);
         const [lo, hi] = sample[i].id < sample[j].id
           ? [sample[i], sample[j]] : [sample[j], sample[i]];
         const { error } = await db.from('correlations').upsert({
           series_a: lo.id, series_b: hi.id,
           r: Math.round(r * 1000) / 1000,
+          r_diff: Math.round(rDiff * 1000) / 1000,
           overlap: xs.length,
           cross_source: lo.source_id !== hi.source_id,
+          geo_match: lo.geo_code === hi.geo_code,
           computed_at: new Date().toISOString(),
         }, { onConflict: 'series_a,series_b' });
         if (!error) written++;

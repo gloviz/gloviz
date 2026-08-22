@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import OrbitChart from '@/components/OrbitChart';
 import OrbitPageMode from '@/components/OrbitPageMode';
 import { ICONS } from '@/lib/icons';
-import { getComparableGeos, getCountryProfile } from '@/lib/queries';
+import InsightCard from '@/components/InsightCard';
+import { getComparableGeos, getCountryProfile, getInsightsForSeries } from '@/lib/queries';
 
 export const revalidate = 300;
 
@@ -30,6 +31,9 @@ export default async function Country({ params }: { params: Promise<{ code: stri
     byDomain.get(m.domain)!.push(m);
   }
   const neighbours = geos.filter((g) => g.code !== code).slice(0, 8);
+  const insights = await getInsightsForSeries(
+    metrics.flatMap((m) => m.refs.filter((r) => r.code === code).map((r) => r.id)), 2,
+  );
 
   return (
     <main className="wrap" style={{ paddingTop: 42, paddingBottom: 40 }}>
@@ -45,6 +49,12 @@ export default async function Country({ params }: { params: Promise<{ code: stri
           </Link>
         ))}
       </div>
+
+      {insights.length > 0 && (
+        <section style={{ marginTop: 22, display: 'grid', gap: 16 }}>
+          {insights.map((i) => <InsightCard key={`${i.seriesId}-${i.createdAt}`} insight={i} />)}
+        </section>
+      )}
 
       {[...byDomain.entries()].map(([domain, list]) => (
         <section key={domain} style={{ marginTop: 26 }}>

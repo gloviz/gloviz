@@ -23,3 +23,13 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Weekly wrap (Sundays)
+        if: github.event_name == 'workflow_dispatch' || format('{0}', github.event.schedule) == '50 3 * * *'
+        run: |
+          if [ "$(date -u +%u)" = "7" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            npx tsx scripts/ai-weekly.ts
+          fi
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

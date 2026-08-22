@@ -3,7 +3,8 @@ import Link from 'next/link';
 import DomainPage from '@/components/DomainPage';
 import OrbitChart from '@/components/OrbitChart';
 import { ICONS } from '@/lib/icons';
-import { getLiveStories, getSeriesRefs } from '@/lib/queries';
+import InsightCard from '@/components/InsightCard';
+import { getInsightsForSeries, getLiveStories, getSeriesRefs } from '@/lib/queries';
 
 export const revalidate = 300;
 
@@ -29,6 +30,9 @@ export default async function LiveStory({ params }: { params: Promise<{ slug: st
   const charts = await Promise.all(
     story.charts.map(async (c) => ({ ...c, refs: (await getSeriesRefs(c.prefix, c.limit)).refs,
       meta: await getSeriesRefs(c.prefix, 1) })),
+  );
+  const insights = await getInsightsForSeries(
+    charts.flatMap((c) => c.refs.map((r) => r.id)), 2,
   );
 
   return (
@@ -72,6 +76,7 @@ export default async function LiveStory({ params }: { params: Promise<{ slug: st
           height={400}
         />
       ))}
+      {insights.map((i) => <InsightCard key={`${i.seriesId}-${i.createdAt}`} insight={i} />)}
       <p className="muted" style={{ fontSize: 12 }}>
         This page is written from the data: the headline and the opening
         paragraph are generated from the last {hours} hours of measurements,

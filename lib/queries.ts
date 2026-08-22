@@ -514,9 +514,12 @@ export async function getPair(idA: number, idB: number): Promise<PairedSeries | 
  * two unrelated institutions is the interesting kind.
  */
 export async function getSurprisingPair(seed?: number): Promise<PairedSeries | null> {
-  // Pairs are precomputed nightly (scripts/insights.ts), so a surprise is one
-  // read plus one pairing, not eight sampling attempts.
-  const candidates = await getTopCorrelations(40, true);
+  // Pairs are precomputed nightly. Only credible ones qualify: the changes
+  // must co-move, so the surprise is a real signal, not a shared trend.
+  const board = await getCorrelationBoard();
+  const candidates = board.credible.filter((c) => c.crossSource).length >= 3
+    ? board.credible.filter((c) => c.crossSource)
+    : board.credible;
   if (!candidates.length) return null;
   const s = seed ?? Math.floor(Date.now() / 3_600_000);
   const pick = candidates[Math.abs(Math.floor(Math.sin(s * 9301) * 233280)) % candidates.length];
@@ -802,12 +805,19 @@ export async function getTopCorrelations(limit = 12, crossOnly = true): Promise<
   const db = readClient();
   let query = db
     .from('correlations')
-    .select('series_a, series_b, r, overlap, cross_source, a:series!correlations_series_a_fkey(id, title), b:series!correlations_series_b_fkey(id, title)')
+    .select('series_a, series_b, r, r_diff, overlap, cross_source, a:series!correlations_series_a_fkey(id, title), b:series!correlations_series_b_fkey(id, title)')
     .limit(1200);
   if (crossOnly) query = query.eq('cross_source', true);
   const { data } = await query;
+  // Apples to apples: rank by co-movement of CHANGES, which survives trends,
+  // and demand enough shared observations to mean something. Pairs without a
+  // differenced r yet rank below every credible pair, never above.
+  const score = (c: any) =>
+    c.r_diff !== null && c.overlap >= 30
+      ? 1 + Math.abs(Number(c.r_diff))
+      : Math.abs(Number(c.r)) * 0.5;
   return ((data ?? []) as any[])
-    .sort((x, y) => Math.abs(y.r) - Math.abs(x.r))
+    .sort((x, y) => score(y) - score(x))
     .slice(0, limit)
     .map((c) => ({
       a: { id: c.a?.id, title: c.a?.title ?? '' },
@@ -888,4 +898,64 @@ export async function getInsights(limit = 8): Promise<Insight[]> {
     source: r.series?.sources?.name ?? '',
     domain: r.series?.domain ?? '',
   }));
+}
+
+/** The correlation board: credible co-movements against trend artifacts. */
+export async function getCorrelationBoard() {
+  const db = readClient();
+  const { data } = await db
+    .from('correlations')
+    .select('series_a, series_b, r, r_diff, overlap, cross_source, geo_match, a:series!correlations_series_a_fkey(id, title, geo_code), b:series!correlations_series_b_fkey(id, title, geo_code)')
+    .not('r_diff', 'is', null)
+    .limit(1500);
+  const rows = ((data ?? []) as any[]).map((c) => ({
+    a: { id: c.a?.id, title: c.a?.title ?? '', geo: c.a?.geo_code },
+    b: { id: c.b?.id, title: c.b?.title ?? '', geo: c.b?.geo_code },
+    r: Number(c.r), rDiff: Number(c.r_diff), overlap: c.overlap,
+    crossSource: c.cross_source, geoMatch: c.geo_match,
+  }));
+  // Credible: the changes move together too, with enough data behind them.
+  const credible = rows
+    .filter((c) => Math.abs(c.rDiff) >= 0.4 && c.overlap >= 30)
+    .sort((x, y) => Math.abs(y.rDiff) - Math.abs(x.rDiff))
+    .slice(0, 14);
+  // Coincidence: strong in levels, dead in changes. Trend artifacts.
+  const spurious = rows
+    .filter((c) => Math.abs(c.r) >= 0.85 && Math.abs(c.rDiff) < 0.2 && c.crossSource)
+    .sort((x, y) => Math.abs(y.r) - Math.abs(x.r))
+    .slice(0, 14);
+  return { credible, spurious };
+}
+
+/** Insights for a specific set of series, for story and country pages. */
+export async function getInsightsForSeries(ids: number[], limit = 3): Promise<Insight[]> {
+  if (!ids.length) return [];
+  const db = readClient();
+  const { data } = await db
+    .from('insights')
+    .select('series_id, headline, body, facts, model, created_at, series(title, unit, domain, sources(name))')
+    .in('series_id', ids)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return ((data ?? []) as any[]).map((r) => ({
+    seriesId: r.series_id, headline: r.headline, body: r.body,
+    facts: r.facts ?? {}, model: r.model, createdAt: r.created_at,
+    title: r.series?.title ?? '', unit: r.series?.unit ?? '',
+    source: r.series?.sources?.name ?? '', domain: r.series?.domain ?? '',
+  }));
+}
+
+/** The freshest weekly summary, if one has been generated. */
+export async function getWeekly(): Promise<Insight | null> {
+  const db = readClient();
+  const { data } = await db
+    .from('insights')
+    .select('series_id, headline, body, facts, model, created_at')
+    .eq('kind', 'weekly')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  const r = (data ?? [])[0] as any;
+  if (!r) return null;
+  return { seriesId: 0, headline: r.headline, body: r.body, facts: r.facts ?? {},
+    model: r.model, createdAt: r.created_at, title: '', unit: '', source: '', domain: '' };
 }

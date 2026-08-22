@@ -17,7 +17,7 @@ export default async function Surprise({
   return (
     <main className="wrap" style={{ paddingTop: 42, paddingBottom: 40 }}>
       <div className="kicker" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span className="dot" /> Two series that should have nothing to do with each other
+        <span className="dot" /> Two sources, one signal
       </div>
       <h2 style={{ marginTop: 12 }}>Surprise <em>me</em></h2>
 
@@ -31,11 +31,12 @@ export default async function Surprise({
         <>
           <p className="muted" style={{ maxWidth: '62ch', marginTop: 12 }}>
             GLOVIZ picked <strong>{pair.a.label}</strong> from {pair.a.source} and{' '}
-            <strong>{pair.b.label}</strong> from {pair.b.source}, paired them on time,
-            and found a correlation of <strong>{pair.r}</strong> over{' '}
-            {pair.overlap.toLocaleString('en')} matched observations. Two different
-            institutions, two different measurement programmes, no shared mechanism.
-            That is the point: with a thousand series, coincidences are cheap.
+            <strong>{pair.b.label}</strong> from {pair.b.source}: two institutions,
+            two measurement programmes, one signal. The pair qualifies because the
+            <em> changes</em> move together, not just the trends, with r ={' '}
+            <strong>{pair.r}</strong> over {pair.overlap.toLocaleString('en')} matched
+            observations. Coincidences are filtered on{' '}
+            <Link href="/correlations">the correlation board</Link>.
           </p>
 
           <div className="pagetools">
@@ -53,7 +54,7 @@ export default async function Surprise({
               series={[{ id: pair.a.id, name: pair.a.label }, { id: pair.b.id, name: pair.b.label }]}
               type="spline"
               initialTool="insights"
-              note={`These two series were paired at random from different sources. Pearson r is ${pair.r} over ${pair.overlap} matched observations. Treat any narrative here with suspicion: this is a demonstration of how easily correlation appears.`}
+              note={`Two series from different institutions whose changes co-move (differenced correlation filter applied). Pearson r is ${pair.r} over ${pair.overlap} matched observations. Correlation still is not causation.`}
               extraOptions={{
                 yAxis: [
                   { title: { text: pair.a.unit } },
