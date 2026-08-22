@@ -4,12 +4,12 @@ import { readClient } from '@/lib/supabase';
 /**
  * Highcharts-shaped [timestamp, value] pairs for one series.
  *
- * PostgREST caps a response at 1000 rows. Reading ascending therefore returns
- * the OLDEST thousand points, which on a fast series means a chart that stops
- * weeks ago. Always read newest first and reverse.
+ * PostgREST caps a response at `max_rows` (raised to 20000 for this project).
+ * Read newest first regardless, so a cap can only ever drop old points, never
+ * the recent end: reading ascending once produced charts that stopped weeks ago.
  *
  * ?from=<epoch ms> limits the read to a window, so a story about the last day
- * gets the last day rather than a thousand points from whenever.
+ * gets the last day rather than the last N points from whenever.
  */
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     .select('ts, value')
     .eq('series_id', Number(id))
     .order('ts', { ascending: false })
-    .limit(1000);
+    .limit(20000);
 
   if (from && /^\d+$/.test(from)) {
     query = query.gte('ts', new Date(Number(from)).toISOString());

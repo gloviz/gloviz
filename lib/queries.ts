@@ -406,12 +406,12 @@ export interface PairedSeries {
   overlap: number;
 }
 
-async function readSeries(id: number, take = 1000): Promise<{ ts: number; value: number }[]> {
+async function readSeries(id: number, take = 20000): Promise<{ ts: number; value: number }[]> {
   const db = readClient();
-  // PostgREST caps a response at 1000 rows, so read the MOST RECENT window,
-  // not the oldest: two series with different cadences only overlap at the
-  // recent end. Reading ascending here silently produced disjoint windows and
-  // an empty pairing, which is exactly the bug this comment exists to prevent.
+  // Read the MOST RECENT window, never the oldest: two series with different
+  // cadences only overlap at the recent end, and reading ascending under a row
+  // cap silently produced disjoint windows and an empty pairing. max_rows is
+  // 20000 for this project, so this now covers whole series in practice.
   const { data } = await db
     .from('observations')
     .select('ts, value')
