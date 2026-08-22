@@ -7,83 +7,191 @@ import { getCorrelationBoard } from '@/lib/queries';
 export const revalidate = 300;
 export const metadata = {
   title: 'Correlations · GLOVIZ',
-  description: 'Which correlations survive differencing, and which are trend artifacts.',
+  description: 'What really moves together, what only looks like it, and how to tell the difference.',
 };
+
+/** Plain-language strength label for a correlation value. */
+function words(v: number) {
+  const a = Math.abs(v);
+  const s = a >= 0.85 ? 'Very strong' : a >= 0.7 ? 'Strong' : a >= 0.55 ? 'Clear' : 'Moderate';
+  return `${s}, ${v >= 0 ? 'same direction' : 'opposite directions'}`;
+}
+
+/** A horizontal strength bar: filled share = |value| on the -1..1 scale. */
+function Bar({ v, color }: { v: number; color: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 150 }}>
+      <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--surface2)' }}>
+        <div style={{ width: `${Math.round(Math.abs(v) * 100)}%`, height: 6, borderRadius: 3, background: color }} />
+      </div>
+      <small className="muted" style={{ fontVariantNumeric: 'tabular-nums', minWidth: 42, textAlign: 'right' }}>{v}</small>
+    </div>
+  );
+}
+
+const STEPS = [
+  {
+    n: '1', t: 'Line them up',
+    d: 'Every night we take each pair of series measured on the same rhythm, hourly with hourly, daily with daily, and line them up point by point.',
+  },
+  {
+    n: '2', t: 'Ignore the long trend',
+    d: 'Two things that both grow for years will always look related. So we also compare only the day-to-day changes: on the days one went up, did the other go up too?',
+  },
+  {
+    n: '3', t: 'Keep what survives',
+    d: 'Pairs whose daily changes agree across at least 30 shared days pass. Pairs that only match in the long lines land in the coincidence list below, on purpose.',
+  },
+];
 
 export default async function Correlations() {
   const { credible, spurious } = await getCorrelationBoard();
-  const top = credible[0];
+
+  // A few examples with different flavours: the strongest pair, the strongest
+  // mirror-image (negative) pair, and the strongest pair confirmed by two
+  // independent sources.
+  const examples: typeof credible = [];
+  const add = (c?: (typeof credible)[number]) => {
+    if (c && !examples.some((e) => e.a.id === c.a.id && e.b.id === c.b.id)) examples.push(c);
+  };
+  add(credible[0]);
+  add(credible.find((c) => c.rDiff < 0));
+  add(credible.find((c) => c.crossSource));
+  const fake = spurious[0];
+  const chartCount = examples.length + (fake ? 1 : 0);
 
   return (
     <main className="wrap" style={{ paddingTop: 42, paddingBottom: 40 }}>
       <div className="kicker" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span className="dot" /> Recomputed nightly across every same-cadence pair
+        <span className="dot" /> Checked again every night, across every pair we track
       </div>
-      <h2 style={{ marginTop: 12 }}>Correlations, <em>sorted by honesty</em></h2>
+      <h2 style={{ marginTop: 12 }}>What moves together, <em>and what just looks like it</em></h2>
       <p className="muted" style={{ maxWidth: '64ch', marginTop: 12 }}>
-        Two series that both trend will always correlate. The test that matters
-        is whether the <strong>changes</strong> move together: r is the
-        correlation of levels, r<sub>Δ</sub> of the day-to-day changes. High
-        r<sub>Δ</sub> means genuine co-movement. High r with r<sub>Δ</sub> near
-        zero means two trends that happen to share a decade.
+        When two lines rise together for years it is tempting to see a
+        connection. Often there is none: almost everything that grows looks
+        related to everything else that grows. So GLOVIZ runs one extra check
+        on every pair, and sorts the results into real links and lucky ones.
       </p>
 
-      {top && (
-        <OrbitChart
-          chartId="corr-top"
-          title={`${top.a.title} and ${top.b.title}`}
-          subtitle={`The strongest credible pair right now · r = ${top.r}, rΔ = ${top.rDiff} over ${top.overlap} points`}
-          iconHtml={ICONS.correlations}
-          attribution="Both series from the GLOVIZ database"
-          series={[{ id: top.a.id, name: top.a.title }, { id: top.b.id, name: top.b.title }]}
-          type="spline"
-          initialTool="correlations"
-          note={`Level correlation ${top.r}; correlation of first differences ${top.rDiff}. The second number is why this pair is listed as credible.`}
-          extraOptions={{ yAxis: [{ title: { text: '' } }, { title: { text: '' }, opposite: true }], series: [{ yAxis: 0 }, { yAxis: 1 }] }}
-          height={420}
-        />
+      <section style={{ marginTop: 26 }}>
+        <div className="kicker">How the test works</div>
+        <div className="grid3" style={{ marginTop: 14 }}>
+          {STEPS.map((s) => (
+            <div className="card" key={s.n}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <span style={{ color: 'var(--amber)', fontWeight: 800, fontSize: 22 }}>{s.n}</span>
+                <b>{s.t}</b>
+              </div>
+              <p className="muted" style={{ fontSize: 13, marginTop: 8 }}>{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {examples.length > 0 && (
+        <section style={{ marginTop: 30 }}>
+          <div className="kicker">See it for yourself</div>
+          <p className="muted" style={{ fontSize: 13, marginTop: 6, maxWidth: '60ch' }}>
+            Each chart shows a pair that passed. One line per axis, so
+            differently sized things can share a picture. Watch the wiggles,
+            not the levels: they move together, or in mirror image.
+          </p>
+          {examples.map((c, i) => (
+            <OrbitChart
+              key={`${c.a.id}-${c.b.id}`}
+              chartId={`corr-ex-${i}`}
+              title={`${c.a.title} and ${c.b.title}`}
+              subtitle={`${words(c.rDiff)} · agreed across ${c.overlap} shared days`}
+              iconHtml={ICONS.correlations}
+              attribution="Both series from the GLOVIZ database"
+              series={[{ id: c.a.id, name: c.a.title }, { id: c.b.id, name: c.b.title }]}
+              type="spline"
+              initialTool={i === 0 ? 'correlations' : undefined}
+              note={`Correlation of levels ${c.r}; correlation of day-to-day changes ${c.rDiff} over ${c.overlap} shared days. The day-to-day number is the one that makes this pair credible.`}
+              extraOptions={{ yAxis: [{ title: { text: '' } }, { title: { text: '' }, opposite: true }], series: [{ yAxis: 0 }, { yAxis: 1 }] }}
+              height={i === 0 ? 420 : 340}
+            />
+          ))}
+        </section>
       )}
 
       <section style={{ marginTop: 30 }}>
-        <div className="kicker">Credible: the changes agree</div>
+        <div className="kicker">Passed: these move together day by day</div>
         <div className="card" style={{ marginTop: 14, overflowX: 'auto' }}>
           <table>
-            <thead><tr><th>Pair</th><th>r</th><th>rΔ</th><th>Points</th><th>Signals</th><th></th></tr></thead>
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>Day-to-day agreement</th>
+                <th>Shared days</th>
+                <th>Extra evidence</th>
+                <th></th>
+              </tr>
+            </thead>
             <tbody>
               {credible.map((c) => (
                 <tr key={`${c.a.id}-${c.b.id}`}>
                   <td>{c.a.title} × {c.b.title}</td>
-                  <td>{c.r}</td>
-                  <td style={{ color: 'var(--s3)', fontWeight: 700 }}>{c.rDiff}</td>
+                  <td>
+                    <Bar v={c.rDiff} color="var(--s3)" />
+                    <small className="muted">{words(c.rDiff)}</small>
+                  </td>
                   <td>{c.overlap}</td>
                   <td>
                     {c.geoMatch && <span className="pill on" style={{ marginRight: 4 }}>same place</span>}
-                    {c.crossSource && <span className="pill">two sources</span>}
+                    {c.crossSource && <span className="pill">two independent sources</span>}
                   </td>
                   <td><Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link></td>
                 </tr>
               ))}
-              {credible.length === 0 && <tr><td colSpan={6}>Nothing qualifies yet; the nightly job is still filling the table.</td></tr>}
+              {credible.length === 0 && <tr><td colSpan={5}>Nothing qualifies yet; the nightly job is still filling the table.</td></tr>}
             </tbody>
           </table>
         </div>
       </section>
 
       <section style={{ marginTop: 30 }}>
-        <div className="kicker">Probably coincidence: strong in levels, dead in changes</div>
-        <p className="muted" style={{ fontSize: 13, marginTop: 6, maxWidth: '60ch' }}>
-          These look impressive and mean almost nothing. They are listed because
-          knowing what a spurious correlation looks like is half the literacy.
+        <div className="kicker">Failed: they only share a trend</div>
+        <p className="muted" style={{ fontSize: 13, marginTop: 6, maxWidth: '62ch' }}>
+          These pairs look impressively connected, until you check the daily
+          movements and find nothing there. They just drifted in the same
+          direction over the same years. We show them because recognising this
+          pattern is the most useful statistics lesson there is.
         </p>
+        {fake && (
+          <OrbitChart
+            chartId="corr-fake"
+            title={`${fake.a.title} and ${fake.b.title}`}
+            subtitle={`Looks connected, is not · long-line match ${fake.r}, day-to-day match only ${fake.rDiff}`}
+            iconHtml={ICONS.anomaly}
+            attribution="Both series from the GLOVIZ database"
+            series={[{ id: fake.a.id, name: fake.a.title }, { id: fake.b.id, name: fake.b.title }]}
+            type="spline"
+            note={`A deliberately spurious example. Levels correlate at ${fake.r}, but day-to-day changes only at ${fake.rDiff}, so the apparent link is two unrelated trends sharing a time period.`}
+            extraOptions={{ yAxis: [{ title: { text: '' } }, { title: { text: '' }, opposite: true }], series: [{ yAxis: 0 }, { yAxis: 1 }] }}
+            height={340}
+          />
+        )}
         <div className="card" style={{ marginTop: 14, overflowX: 'auto' }}>
           <table>
-            <thead><tr><th>Pair</th><th>r</th><th>rΔ</th><th>Points</th><th></th></tr></thead>
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>Looks connected</th>
+                <th>Day-to-day test</th>
+                <th>Shared days</th>
+                <th></th>
+              </tr>
+            </thead>
             <tbody>
               {spurious.map((c) => (
                 <tr key={`${c.a.id}-${c.b.id}`}>
                   <td>{c.a.title} × {c.b.title}</td>
-                  <td style={{ color: 'var(--s4)', fontWeight: 700 }}>{c.r}</td>
-                  <td>{c.rDiff}</td>
+                  <td><Bar v={c.r} color="var(--s4)" /></td>
+                  <td>
+                    <Bar v={c.rDiff} color="var(--muted)" />
+                    <small className="muted">fails</small>
+                  </td>
                   <td>{c.overlap}</td>
                   <td><Link className="link" href={`/explore?x=${c.a.id}&y=${c.b.id}`} style={{ fontSize: 10 }}>Open</Link></td>
                 </tr>
@@ -94,7 +202,7 @@ export default async function Correlations() {
         </div>
       </section>
 
-      <OrbitPageMode pageKey="gloviz-correlations" expectedCharts={1} />
+      <OrbitPageMode pageKey="gloviz-correlations" expectedCharts={chartCount} />
     </main>
   );
 }

@@ -160,6 +160,11 @@ export default function OrbitChart({
           ...(note ? { llmContext: { text: [note] } } : {}),
         },
         chart: { type },
+        // Fetched series are [epoch ms, value] pairs; the axis default is
+        // 'linear', which renders raw milliseconds ("1,780G"). Datetime is
+        // required for date ticks (api.highcharts.com/highcharts/xAxis.type).
+        // extraOptions merges after this and can still override.
+        ...(series?.length ? { xAxis: { type: 'datetime' } } : {}),
         series: resolved,
       }, extraOptions ?? {});
       // title.text defaults to "Chart title"
